@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Selavu · Customers</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#E8EAF4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0F24" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Onest:wght@400;500;600;700&display=swap">
+<style>
+[hidden] { display: none !important; }
+:root {
+  --bg: #E8EAF4; --surface: #FFFFFF; --field: #F3F4FA; --ink: #191A3D; --mute: #63668A; --line: #DCDFEE;
+  --accent: #3D35E0; --accent-soft: #E6E4FF; --accent-ink: #FFFFFF;
+  --hero-bg: #2B25B5; --hero-mute: #C3C0FF; --good: #12946B; --good-soft: #DDF4EB; --warn: #B7791F; --warn-soft: #FBEFD9; --bad: #D63B63;
+  --shadow: 0 1px 0 rgba(25,26,61,.04), 0 12px 32px -18px rgba(43,37,181,.35);
+  --f-display: 'Unbounded', system-ui, sans-serif;
+  --f-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E0F24; --surface: #171936; --field: #11132B; --ink: #ECEDFF; --mute: #9A9DC4; --line: #272A52;
+    --accent: #8F8AFF; --accent-soft: #24245A; --accent-ink: #0E0F24; --good: #4FD6A4; --good-soft: #143A31; --warn: #F2C26B; --warn-soft: #3A2F17; --bad: #FF7C9B;
+    --shadow: 0 12px 32px -20px rgba(0,0,0,.8); color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); font-variant-numeric: tabular-nums;
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px)); min-height: 100vh; }
+button { font-family: inherit; }
+.wrap { max-width: 68rem; margin: 0 auto; display: grid; gap: 18px; }
+.narrow { max-width: 26rem; margin: 8vh auto 0; }
+h1 { font: 700 22px/1 var(--f-display); letter-spacing: -0.01em; margin: 0; color: var(--accent); }
+h1 a { color: inherit; text-decoration: none; }
+h2 { font: 600 17px/1.25 var(--f-body); margin: 0; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.sub { color: var(--mute); font-size: 13px; }
+.pill { font: 600 13px var(--f-body); color: var(--mute); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+.pill:hover { color: var(--ink); }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* passbook band: the bold element, shared with the app */
+.band {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(255,255,255,.09) 31px 32px),
+    linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.16) 44px 45px, transparent 45px),
+    var(--hero-bg);
+  color: #fff; border-radius: 26px; padding: 22px 24px 22px 62px; box-shadow: 0 24px 48px -28px rgba(43,37,181,.9);
+  display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 18px; align-items: end;
+}
+.band .k { font-size: 12.5px; color: var(--hero-mute); }
+.band .v { font: 600 22px/1.1 var(--f-display); letter-spacing: -0.02em; margin-top: 4px; }
+.band .big .v { font-size: clamp(36px, 8vw, 52px); letter-spacing: -0.04em; }
+@media (max-width: 720px) {
+  .band { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-left: 58px; }
+  .band .big { grid-column: 1 / -1; }
+}
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); }
+.bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; }
+input { font: 16px/1.3 var(--f-body); color: var(--ink); background: var(--field); border: 1.5px solid transparent; border-radius: 12px; padding: 11px 13px; width: 100%; }
+input:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 4px var(--accent-soft); }
+.search { max-width: 22rem; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font: 500 12.5px var(--f-body); color: var(--mute); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+th button[aria-sort="ascending"]::after { content: ' ↑'; }
+th button[aria-sort="descending"]::after { content: ' ↓'; }
+td { padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; }
+.who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.av { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 600 13px var(--f-display); color: var(--accent); background: var(--accent-soft); }
+.nm { font-weight: 600; overflow-wrap: anywhere; }
+.nm.none { color: var(--mute); font-weight: 500; font-style: italic; }
+.em { font-size: 13px; color: var(--mute); overflow-wrap: anywhere; }
+.when { white-space: nowrap; }
+.when small { display: block; color: var(--mute); font-size: 12px; }
+.chip { display: inline-block; font: 600 12px var(--f-body); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.chip.ok { color: var(--good); background: var(--good-soft); }
+.chip.wait { color: var(--warn); background: var(--warn-soft); }
+.chip.owner { color: var(--accent); background: var(--accent-soft); margin-left: 6px; }
+.empty, .msg { color: var(--mute); padding: 18px 4px; }
+.msg.bad { color: var(--bad); }
+.note { color: var(--mute); font-size: 12.5px; text-align: center; margin: 0; }
+
+@media (max-width: 760px) {
+  table, tbody, tr, td { display: block; }
+  thead { display: none; }
+  tr { border-bottom: 1px solid var(--line); padding: 12px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+  tr:last-child { border-bottom: 0; }
+  td { border: 0; padding: 0; }
+  td:first-child { grid-column: 1 / -1; margin-bottom: 4px; }
+  td.num { text-align: left; }
+  td[data-k]::before { content: attr(data-k); display: block; font-size: 12px; color: var(--mute); }
+}
+
+/* sign in */
+.tabs-lead { color: var(--mute); margin: 6px 0 14px; }
+label { display: block; font: 500 13px var(--f-body); color: var(--mute); margin: 12px 0 6px; }
+.primary { width: 100%; margin-top: 16px; font: 600 16px var(--f-body); color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 14px; padding: 14px; cursor: pointer; }
+.primary:disabled { opacity: .45; }
+.formmsg { min-height: 1.3em; margin: 10px 0 0; font-size: 13px; color: var(--bad); }
+</style>
+</head>
+<body>
+
+<!-- loading -->
+<main class="wrap" id="loadView"><p class="msg">Opening your dashboard…</p></main>
+
+<!-- signed out -->
+<main class="narrow" id="authView" hidden>
+  <div class="brand"><h1>Selavu</h1><span class="sub">owner dashboard</span></div>
+  <div class="card" style="margin-top:18px">
+    <h2>Sign in</h2>
+    <p class="tabs-lead">Use your owner account to see your customers.</p>
+    <label for="aemail">Email</label>
+    <input id="aemail" type="email" autocomplete="email" autocapitalize="off" spellcheck="false">
+    <label for="apass">Password</label>
+    <input id="apass" type="password" autocomplete="current-password">
+    <p class="formmsg" id="authMsg" role="status"></p>
+    <button type="button" class="primary" id="authGo">Sign in</button>
+  </div>
+</main>
+
+<!-- signed in but not the owner -->
+<main class="narrow" id="denyView" hidden>
+  <div class="brand"><h1><a href="./">Selavu</a></h1></div>
+  <div class="card" style="margin-top:18px">
+    <h2>This page is only for the Selavu owner</h2>
+    <p class="tabs-lead" id="denyWho"></p>
+    <div class="acts"><a class="pill" href="./">Open my expenses</a><button type="button" class="pill" id="denyOut">Sign out</button></div>
+  </div>
+</main>
+
+<!-- owner -->
+<main class="wrap" id="dashView" hidden>
+  <header class="top">
+    <div class="brand"><h1><a href="./">Selavu</a></h1><span class="sub">customers</span></div>
+    <div class="acts">
+      <button type="button" class="pill" id="csvBtn">Download CSV</button>
+      <a class="pill" href="./">My expenses</a>
+      <button type="button" class="pill" id="signOut">Sign out</button>
+    </div>
+  </header>
+
+  <section class="band" aria-label="Summary">
+    <div class="big"><div class="k">Customers</div><div class="v" id="nAll">0</div></div>
+    <div><div class="k">Joined this week</div><div class="v" id="nNew">0</div></div>
+    <div><div class="k">Active in 7 days</div><div class="v" id="nActive">0</div></div>
+    <div><div class="k">Auto-add on phone</div><div class="v" id="nPhone">0</div></div>
+  </section>
+
+  <section class="card">
+    <div class="bar">
+      <h2>All customers</h2>
+      <input class="search" id="q" type="search" placeholder="Search name or email" aria-label="Search customers" autocomplete="off">
+    </div>
+    <table>
+      <thead><tr>
+        <th><button type="button" data-sort="name">Customer</button></th>
+        <th><button type="button" data-sort="joined_at" aria-sort="descending">Joined</button></th>
+        <th><button type="button" data-sort="last_sign_in_at">Last sign-in</button></th>
+        <th class="num"><button type="button" data-sort="entries">Entries</button></th>
+        <th class="num"><button type="button" data-sort="phones">Phones</button></th>
+        <th>Email</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="empty" hidden></p>
+  </section>
+  <p class="note">You see each customer's name, email and activity. Their expenses and balances stay private to them.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  'use strict';
+  const SB_URL = 'https://enyuzhzxfxbsfixldeuw.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVueXV6aHp4Znhic2ZpeGxkZXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2ODYwNDEsImV4cCI6MjEwOTI2MjA0MX0.lrt-CmJCWqxkvtGHdAWHPSQdyVJmExyd7pi21ySYfLA';
+  const $ = function (id) { return document.getElementById(id); };
+  const views = ['loadView', 'authView', 'denyView', 'dashView'];
+  function show(v) { views.forEach(function (x) { $(x).hidden = x !== v; }); }
+  let sb = null, all = [], sortKey = 'joined_at', sortDir = -1;
+
+  const DAY = 864e5;
+  const dfmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const tfmt = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' });
+  function ago(iso) {
+    if (!iso) return { main: 'Never', sub: '' };
+    const d = new Date(iso), diff = Date.now() - d.getTime();
+    let main;
+    if (diff < 60e3) main = 'Just now';
+    else if (diff < 3600e3) main = Math.floor(diff / 60e3) + ' min ago';
+    else if (diff < DAY) main = Math.floor(diff / 3600e3) + ' h ago';
+    else if (diff < 2 * DAY) main = 'Yesterday';
+    else if (diff < 30 * DAY) main = Math.floor(diff / DAY) + ' days ago';
+    else main = dfmt.format(d);
+    return { main: main, sub: dfmt.format(d) + ', ' + tfmt.format(d) };
+  }
+  function initials(c) {
+    const src = (c.full_name || c.email || '?').trim();
+    const parts = src.split(/[\s@._-]+/).filter(Boolean);
+    return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  }
+  function el(tag, attrs, kids) {
+    const n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === 'class') n.className = attrs[k]; else if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  function whenCell(label, iso) {
+    const a = ago(iso);
+    const td = el('td', { class: 'when', 'data-k': label });
+    td.appendChild(document.createTextNode(a.main));
+    if (a.sub) td.appendChild(el('small', { text: a.sub }));
+    return td;
+  }
+
+  function render() {
+    const q = $('q').value.trim().toLowerCase();
+    const list = all.filter(function (c) {
+      return !q || (c.full_name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
+    }).sort(function (a, b) {
+      let x = a[sortKey], y = b[sortKey];
+      if (sortKey === 'name') { x = (a.full_name || a.email || '').toLowerCase(); y = (b.full_name || b.email || '').toLowerCase(); }
+      if (sortKey === 'entries' || sortKey === 'phones') { x = Number(x) || 0; y = Number(y) || 0; }
+      if (x == null) return 1; if (y == null) return -1;
+      return (x > y ? 1 : x < y ? -1 : 0) * sortDir;
+    });
+    const tb = $('rows'); tb.textContent = '';
+    list.forEach(function (c) {
+      const nameEl = el('div', { class: 'nm' + (c.full_name ? '' : ' none'), text: c.full_name || 'No name yet' });
+      if (c.is_owner) nameEl.appendChild(el('span', { class: 'chip owner', text: 'You' }));
+      tb.appendChild(el('tr', null, [
+        el('td', null, [el('div', { class: 'who' }, [
+          el('div', { class: 'av', 'aria-hidden': 'true', text: initials(c) }),
+          el('div', null, [nameEl, el('div', { class: 'em', text: c.email || '' })])
+        ])]),
+        whenCell('Joined', c.joined_at),
+        whenCell('Last sign-in', c.last_sign_in_at),
+        el('td', { class: 'num', 'data-k': 'Entries', text: String(c.entries || 0) }),
+        el('td', { class: 'num', 'data-k': 'Phones', text: String(c.phones || 0) }),
+        el('td', { 'data-k': 'Email' }, [el('span', { class: 'chip ' + (c.verified ? 'ok' : 'wait'), text: c.verified ? 'Verified' : 'Not confirmed' })])
+      ]));
+    });
+    const e = $('empty');
+    e.hidden = list.length > 0;
+    e.textContent = all.length ? 'No customer matches "' + $('q').value.trim() + '".' : 'No customers yet. Share your app link to get your first sign-up.';
+  }
+
+  function summary() {
+    const now = Date.now();
+    $('nAll').textContent = all.length;
+    $('nNew').textContent = all.filter(function (c) { return now - new Date(c.joined_at) < 7 * DAY; }).length;
+    $('nActive').textContent = all.filter(function (c) {
+      const t = Math.max(c.last_sign_in_at ? +new Date(c.last_sign_in_at) : 0, c.last_entry_at ? +new Date(c.last_entry_at) : 0);
+      return now - t < 7 * DAY;
+    }).length;
+    $('nPhone').textContent = all.filter(function (c) { return Number(c.phones) > 0; }).length;
+  }
+
+  async function load() {
+    show('loadView');
+    const s = await sb.auth.getSession();
+    const user = s.data && s.data.session ? s.data.session.user : null;
+    if (!user) { show('authView'); return; }
+    const adm = await sb.rpc('is_admin');
+    if (adm.error || adm.data !== true) {
+      $('denyWho').textContent = 'You are signed in as ' + user.email + '.';
+      show('denyView'); return;
+    }
+    const r = await sb.rpc('admin_list_customers');
+    show('dashView');
+    if (r.error) { $('empty').hidden = false; $('empty').className = 'msg bad'; $('empty').textContent = 'Could not load customers. Reload the page.'; return; }
+    all = r.data || [];
+    summary(); render();
+  }
+
+  function csv() {
+    const head = ['name', 'email', 'joined', 'last_sign_in', 'entries', 'phones', 'email_confirmed'];
+    const esc = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const lines = [head.join(',')].concat(all.map(function (c) {
+      return [c.full_name, c.email, c.joined_at, c.last_sign_in_at, c.entries, c.phones, c.verified ? 'yes' : 'no'].map(esc).join(',');
+    }));
+    const a = el('a', { href: URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' })), download: 'selavu-customers.csv' });
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  async function signIn() {
+    const email = $('aemail').value.trim(), password = $('apass').value, msg = $('authMsg');
+    msg.textContent = '';
+    if (!email || !password) { msg.textContent = 'Enter your email and password.'; return; }
+    $('authGo').disabled = true;
+    const r = await sb.auth.signInWithPassword({ email: email, password: password });
+    $('authGo').disabled = false;
+    if (r.error) { msg.textContent = /invalid/i.test(r.error.message) ? 'Email or password is wrong.' : 'Could not sign in. Try again.'; return; }
+    $('apass').value = '';
+    load();
+  }
+  async function signOut() { await sb.auth.signOut(); show('authView'); }
+
+  if (!window.supabase) { $('loadView').firstElementChild.textContent = 'Could not load. Check your internet and reload.'; return; }
+  sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+  $('authGo').addEventListener('click', signIn);
+  [$('aemail'), $('apass')].forEach(function (i) { i.addEventListener('keydown', function (e) { if (e.key === 'Enter') signIn(); }); });
+  $('signOut').addEventListener('click', signOut);
+  $('denyOut').addEventListener('click', signOut);
+  $('csvBtn').addEventListener('click', csv);
+  $('q').addEventListener('input', render);
+  document.querySelectorAll('th button[data-sort]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      const k = b.dataset.sort;
+      sortDir = sortKey === k ? -sortDir : (k === 'name' ? 1 : -1);
+      sortKey = k;
+      document.querySelectorAll('th button[data-sort]').forEach(function (o) { o.removeAttribute('aria-sort'); });
+      b.setAttribute('aria-sort', sortDir === 1 ? 'ascending' : 'descending');
+      render();
+    });
+  });
+  load();
+})();
+</script>
+</body>
+</html>
