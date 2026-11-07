@@ -164,12 +164,11 @@ ul.rows .row:first-child { border-top: 0; }
 .empty { color: var(--mute); }
 .empty p { margin: 0 0 8px; }
 
-details.card { padding: 0; }
-details.card summary { cursor: pointer; font: 600 15px var(--f-body); padding: 16px 18px; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+details.card { padding: 0 18px; }
+details.card summary { cursor: pointer; font: 600 15px var(--f-body); padding: 16px 18px; margin: 0 -18px; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 details.card summary::-webkit-details-marker { display: none; }
 details.card summary::after { content: '+'; font: 500 20px/1 var(--f-body); color: var(--accent); transition: transform .2s; }
 details.card[open] summary::after { transform: rotate(45deg); }
-details.card > :not(summary) { margin-left: 18px; margin-right: 18px; }
 details.card > :last-child { margin-bottom: 18px; }
 details ol { margin: 8px 0 0; padding-left: 20px; color: var(--ink); }
 details li { margin: 6px 0; }
@@ -201,6 +200,21 @@ ol.steps li { margin: 8px 0; }
 .topact { display: flex; gap: 8px; align-items: center; }
 .ownerlink { text-decoration: none; display: inline-block; }
 
+/* checkboxes, selects, danger zone */
+.check { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; margin: 14px 0 0; font-size: 14px; color: var(--ink); cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 1px 0 0; padding: 0; accent-color: var(--accent); cursor: pointer; }
+.check a, .footlinks a { color: var(--accent); font-weight: 600; }
+select { appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--mute) 50%), linear-gradient(135deg, var(--mute) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 34px; }
+.opt { font-weight: 400; color: var(--mute); }
+.danger { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.danger h3 { font: 600 14px var(--f-body); margin: 0; }
+.dangerbtn { margin-top: 10px; font: 600 14px var(--f-body); color: var(--debit); background: transparent; border: 1.5px solid var(--debit); border-radius: 12px; padding: 10px 14px; cursor: pointer; }
+.dangerbtn.armed { color: #fff; background: var(--debit); }
+.footlinks { display: flex; justify-content: center; gap: 16px; font-size: 12px; color: var(--mute); margin: 0; }
+#consentView .card h2 { font-size: 19px; }
+
 /* sign-in screen */
 #authView .top { margin-top: 6vh; }
 #authView h1 { font-size: 34px; }
@@ -230,9 +244,28 @@ ol.steps li { margin: 8px 0; }
       <input id="aemail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false">
       <label class="fl" for="apass">Password</label>
       <input id="apass" type="password" autocomplete="current-password" minlength="8">
+      <div id="upChecks" hidden>
+        <label class="check"><input type="checkbox" id="aadult"><span>I am 18 or older</span></label>
+        <label class="check"><input type="checkbox" id="aagree"><span>I agree to the <a href="privacy.html" target="_blank" rel="noopener">privacy note</a></span></label>
+      </div>
       <p class="formmsg" id="authMsg" role="status"></p>
       <button type="button" class="primary" id="authGo">Sign in</button>
       <p class="hint">Your entries belong to your account only. Nobody else can read them.</p>
+    </div>
+    <p class="footlinks" style="margin-top:14px"><a href="privacy.html">Privacy note</a></p>
+  </section>
+
+  <!-- signed in, but has not agreed to the privacy note yet -->
+  <section id="consentView" hidden>
+    <header class="top"><div class="brand"><h1>Selavu</h1></div></header>
+    <div class="card" style="margin-top:20px">
+      <h2>One quick step before you continue</h2>
+      <p class="hint" style="margin-top:0">We've written down what Selavu stores and why. Please read it and confirm.</p>
+      <label class="check"><input type="checkbox" id="cadult"><span>I am 18 or older</span></label>
+      <label class="check"><input type="checkbox" id="cagree"><span>I agree to the <a href="privacy.html" target="_blank" rel="noopener">privacy note</a></span></label>
+      <p class="formmsg" id="consentMsg" role="status"></p>
+      <button type="button" class="primary" id="consentGo">Continue</button>
+      <button type="button" class="link" id="consentOut" style="display:block;margin:12px auto 0">Sign out</button>
     </div>
   </section>
 
@@ -317,8 +350,54 @@ ol.steps li { margin: 8px 0; }
       <summary>Your profile</summary>
       <label class="fl" for="pname">Name</label>
       <input id="pname" autocomplete="name" maxlength="60" placeholder="How should we call you?">
+      <div class="grid2 stack">
+        <div>
+          <label class="fl" for="pphone">Phone <span class="opt">(optional)</span></label>
+          <input id="pphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="18" placeholder="+91 98765 43210">
+        </div>
+        <div>
+          <label class="fl" for="pcity">City <span class="opt">(optional)</span></label>
+          <input id="pcity" autocomplete="address-level2" maxlength="60" placeholder="Chennai">
+        </div>
+      </div>
+      <div class="grid2 stack">
+        <div>
+          <label class="fl" for="ptype">I am a</label>
+          <select id="ptype">
+            <option value="">Choose</option>
+            <option value="student">Student</option>
+            <option value="working">Working professional</option>
+            <option value="self_employed">Self-employed</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl" for="pbank">Main bank</label>
+          <select id="pbank"><option value="">Choose</option></select>
+        </div>
+      </div>
+      <label class="fl" for="pheard">How did you hear about Selavu?</label>
+      <select id="pheard">
+        <option value="">Choose</option>
+        <option>Friend or family</option>
+        <option>College</option>
+        <option>Instagram</option>
+        <option>WhatsApp</option>
+        <option>YouTube</option>
+        <option>LinkedIn</option>
+        <option>Google search</option>
+        <option>Other</option>
+      </select>
       <p class="formmsg" id="profMsg" role="status" style="color:var(--mute)"></p>
-      <button type="button" class="primary" id="saveProf">Save name</button>
+      <button type="button" class="primary" id="saveProf">Save profile</button>
+      <p class="hint">Only you and the Selavu owner can see these details. Your expenses and balance stay private to you.</p>
+
+      <div class="danger">
+        <h3>Delete my account</h3>
+        <p class="hint" style="margin-top:4px">This permanently deletes your account, every entry, your phone tokens and your profile. It can't be undone.</p>
+        <button type="button" class="dangerbtn" id="delAcc">Delete my account</button>
+        <p class="formmsg" id="delMsg" role="status"></p>
+      </div>
     </details>
 
     <details class="card" id="settings">
@@ -364,6 +443,7 @@ ol.steps li { margin: 8px 0; }
     </details>
 
     <p class="who-am-i" id="whoAmI"></p>
+    <p class="footlinks"><a href="privacy.html">Privacy note</a></p>
   </div>
 </main>
 
@@ -424,6 +504,20 @@ function guessCat(who, kind, text) {
   if (/^\d{10}$/.test(who) || /^[A-Z][a-z]+( [A-Z][a-z]+)*$/.test(who)) return 'Transfer';
   return 'Other';
 }
+// Bank name from the SMS text. Same list as the phone function (ingest-sms).
+const BANKS = [
+  ['SBI', /\bsbi\b|state bank/i], ['HDFC', /hdfc/i], ['ICICI', /icici/i], ['Axis', /\baxis\b/i], ['Kotak', /kotak/i],
+  ['IOB', /\biob\b|indian overseas/i], ['Indian Bank', /indian bank/i], ['Canara', /canara/i], ['PNB', /\bpnb\b|punjab national/i],
+  ['Bank of Baroda', /\bbob\b|baroda/i], ['Union Bank', /union bank/i], ['Bank of India', /bank of india|\bboi\b/i],
+  ['IDFC First', /idfc/i], ['Yes Bank', /yes ?bank/i], ['IndusInd', /indusind/i], ['Federal', /federal/i],
+  ['City Union', /city union|\bcub\b/i], ['KVB', /karur vysya|\bkvb\b/i], ['TMB', /tamilnad mercantile|\btmb\b/i],
+  ['AU', /\bau (?:small|bank)/i], ['Paytm', /paytm/i], ['Airtel Payments', /airtel payments/i]
+];
+function detectBank(text) {
+  for (let i = 0; i < BANKS.length; i++) if (BANKS[i][1].test(text)) return BANKS[i][0];
+  return 'Unknown';
+}
+
 function parseSms(raw) {
   const t = String(raw || '').replace(/\s+/g, ' ').trim();
   if (!t) return null;
@@ -461,7 +555,7 @@ function parseSms(raw) {
   const $ = function (id) { return document.getElementById(id); };
   const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const money = function (n) { return '₹' + inr.format(n); };
-  const state = { user: null, txs: [], settings: { balance: null, balanceTs: null, low: 500 }, tokens: [], loaded: false, last: null, seen: null };
+  const state = { user: null, txs: [], settings: { balance: null, balanceTs: null, low: 500 }, tokens: [], loaded: false, last: null, seen: null, profile: null };
   let lastTimer = null, syncTimer = null, loading = false, sb = null;
 
   function el(tag, attrs, kids) {
@@ -786,6 +880,7 @@ function parseSms(raw) {
     if (!r) {
       f.read.textContent = 'No amount found in that message. Fill the fields below by hand.';
       f.read.className = 'read bad';
+      logUnread(text);
       return;
     }
     const kind = r.kind || 'debit';
@@ -800,6 +895,19 @@ function parseSms(raw) {
       (r.kind ? '' : ' · check Spent or Received');
   }
   f.sms.addEventListener('input', fillFromSms);
+  // An unreadable pasted SMS is logged once, after typing settles. Only the bank name is sent, never the text.
+  const unreadSeen = new Set();
+  let unreadTimer = null;
+  function logUnread(text) {
+    clearTimeout(unreadTimer);
+    const t = text.replace(/\s+/g, ' ').trim();
+    if (t.length < 25 || !/(debit|credit|paid|sent|received|withdrawn|spent|a\/c|acct|upi)/i.test(t)) return;
+    unreadTimer = setTimeout(function () {
+      if (!state.user || unreadSeen.has(t) || parseSms(f.sms.value)) return;
+      unreadSeen.add(t);
+      sb.from('parse_failures').insert({ user_id: state.user.id, bank: detectBank(t), source: 'manual', reason: 'no_amount' }).then(function () {}, function () {});
+    }, 3000);
+  }
   document.querySelectorAll('input[name=kind]').forEach(function (r) {
     r.addEventListener('change', function () { if (currentKind() === 'credit' && f.cat.value !== 'Income') f.cat.value = 'Income'; });
   });
@@ -828,6 +936,7 @@ function parseSms(raw) {
       ts: new Date(ts).toISOString(),
       src: f.sms.value.trim() ? 'sms' : 'manual'
     };
+    if (f.sms.value.trim()) doc.bank = detectBank(f.sms.value);
     if (bal !== null) doc.bal = bal;
     f.msg.textContent = '';
     f.add.disabled = true;
@@ -921,20 +1030,101 @@ function parseSms(raw) {
   $('copyTok').addEventListener('click', function () { copyText($('tokText').textContent, $('copyTok')); });
   $('phone').addEventListener('toggle', function () { if (!$('phone').open) { $('newTok').hidden = true; $('tokText').textContent = ''; } });
 
-  /* ---------- profile ---------- */
+  /* ---------- profile, consent and account ---------- */
+  const CONSENT_VERSION = 'v1-2026-11';
+  BANKS.map(function (b) { return b[0]; }).concat(['Other']).forEach(function (n) {
+    const o = document.createElement('option'); o.value = n; o.textContent = n; $('pbank').appendChild(o);
+  });
+  function deviceKind() {
+    const ua = navigator.userAgent || '';
+    if (/iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iphone';
+    if (/android/i.test(ua)) return 'android';
+    if (/windows|macintosh|linux|cros/i.test(ua)) return 'desktop';
+    return 'other';
+  }
+  let lastSeenSent = 0;
+  function touchSeen() {
+    if (!state.user || !state.profile || Date.now() - lastSeenSent < 10 * 60e3) return;
+    lastSeenSent = Date.now();
+    sb.from('profiles').update({ device: deviceKind(), last_seen_at: new Date().toISOString() }).eq('user_id', state.user.id).then(function () {}, function () {});
+  }
+  function fillProfile() {
+    const p = state.profile || {};
+    const meta = (state.user && state.user.user_metadata) || {};
+    $('pname').value = p.full_name || meta.full_name || '';
+    $('pphone').value = p.phone || '';
+    $('pcity').value = p.city || '';
+    $('ptype').value = p.user_type || '';
+    $('pbank').value = p.bank || '';
+    $('pheard').value = p.heard_from || '';
+    if (!$('pname').value) $('profile').open = true;
+  }
   $('saveProf').addEventListener('click', async function () {
-    const name = $('pname').value.trim();
     const msg = $('profMsg');
+    const name = $('pname').value.trim();
+    const phone = $('pphone').value.trim();
+    msg.style.color = 'var(--debit)';
     if (!name) { msg.textContent = 'Enter your name first.'; return; }
+    if (phone && !/^\+?[0-9][0-9 -]{6,17}$/.test(phone)) { msg.textContent = 'Phone should be digits only, like +91 98765 43210.'; return; }
+    const row = {
+      full_name: name.slice(0, 60),
+      phone: phone || null,
+      city: $('pcity').value.trim().slice(0, 60) || null,
+      user_type: $('ptype').value || null,
+      bank: $('pbank').value || null,
+      heard_from: $('pheard').value || null,
+      updated_at: new Date().toISOString()
+    };
     $('saveProf').disabled = true;
     try {
-      const r = await sb.auth.updateUser({ data: { full_name: name } });
+      const r = await sb.from('profiles').update(row).eq('user_id', state.user.id);
       if (r.error) throw r.error;
-      if (r.data && r.data.user) state.user = r.data.user;
-      msg.textContent = 'Name saved.';
-    } catch (e) { msg.textContent = 'Could not save your name. Try again.'; }
+      state.profile = Object.assign({}, state.profile, row);
+      sb.auth.updateUser({ data: { full_name: row.full_name } }).then(function () {}, function () {});
+      msg.style.color = 'var(--mute)';
+      msg.textContent = 'Profile saved.';
+    } catch (e) { msg.textContent = 'Could not save your profile. Try again.'; }
     finally { $('saveProf').disabled = false; }
   });
+
+  // Two taps to delete: the first arms the button, the second deletes.
+  let delArmed = null;
+  $('delAcc').addEventListener('click', async function () {
+    const b = $('delAcc'), msg = $('delMsg');
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent = 'Tap again to delete everything';
+      clearTimeout(delArmed);
+      delArmed = setTimeout(function () { b.classList.remove('armed'); b.textContent = 'Delete my account'; }, 6000);
+      return;
+    }
+    clearTimeout(delArmed);
+    b.disabled = true; msg.textContent = '';
+    try {
+      const r = await sb.rpc('delete_my_account');
+      if (r.error) throw r.error;
+      await sb.auth.signOut();
+      $('authMsg').style.color = 'var(--mute)';
+      $('authMsg').textContent = 'Your account and all your data have been deleted.';
+    } catch (e) {
+      msg.textContent = /owner/i.test((e && e.message) || '') ? 'The owner account cannot be deleted from the app.' : 'Could not delete your account. Try again.';
+    } finally { b.disabled = false; b.classList.remove('armed'); b.textContent = 'Delete my account'; }
+  });
+
+  $('consentGo').addEventListener('click', async function () {
+    const msg = $('consentMsg');
+    if (!$('cadult').checked) { msg.textContent = 'Selavu is only for people aged 18 and older.'; return; }
+    if (!$('cagree').checked) { msg.textContent = 'Tick the box to agree to the privacy note.'; return; }
+    $('consentGo').disabled = true; msg.textContent = '';
+    const row = { is_adult: true, consent_at: new Date().toISOString(), consent_version: CONSENT_VERSION };
+    try {
+      const r = await sb.from('profiles').upsert(Object.assign({ user_id: state.user.id }, row), { onConflict: 'user_id' });
+      if (r.error) throw r.error;
+      state.profile = Object.assign({}, state.profile, row);
+      showApp();
+    } catch (e) { msg.textContent = 'Could not save. Check your internet and try again.'; }
+    finally { $('consentGo').disabled = false; }
+  });
+  $('consentOut').addEventListener('click', async function () { await sb.auth.signOut(); });
 
   /* ---------- auth ---------- */
   let mode = 'in';
@@ -947,6 +1137,7 @@ function parseSms(raw) {
     $('apass').setAttribute('autocomplete', m === 'in' ? 'current-password' : 'new-password');
     $('authMsg').textContent = '';
     $('nameWrap').hidden = m !== 'up';
+    $('upChecks').hidden = m !== 'up';
   }
   $('tabIn').addEventListener('click', function () { setMode('in'); });
   $('tabUp').addEventListener('click', function () { setMode('up'); });
@@ -975,7 +1166,9 @@ function parseSms(raw) {
       } else {
         const name = $('aname').value.trim();
         if (!name) { msg.textContent = 'Enter your name.'; return; }
-        const r = await sb.auth.signUp({ email: email, password: password, options: { data: { full_name: name } } });
+        if (!$('aadult').checked) { msg.textContent = 'Selavu is only for people aged 18 and older.'; return; }
+        if (!$('aagree').checked) { msg.textContent = 'Tick the box to agree to the privacy note.'; return; }
+        const r = await sb.auth.signUp({ email: email, password: password, options: { data: { full_name: name, is_adult: 'true', consent_version: CONSENT_VERSION } } });
         if (r.error) throw r.error;
         if (!r.data.session) { msg.textContent = 'Account created. Check your email, open the confirmation link, then sign in.'; msg.style.color = 'var(--mute)'; return; }
       }
@@ -986,21 +1179,40 @@ function parseSms(raw) {
   [$('aemail'), $('apass')].forEach(function (i) { i.addEventListener('keydown', function (e) { if (e.key === 'Enter') authGo(); }); });
   $('signOut').addEventListener('click', async function () { await sb.auth.signOut(); });
 
-  function route() {
+  function showApp() {
+    $('consentView').hidden = true;
+    $('appView').hidden = false;
+    fillProfile();
+    touchSeen();
+  }
+  async function route() {
     const signedIn = !!state.user;
     $('authView').hidden = signedIn;
-    $('appView').hidden = !signedIn;
+    $('appView').hidden = true;
+    $('consentView').hidden = true;
     if (signedIn) {
+      const uid = state.user.id;
       $('whoAmI').textContent = 'Signed in as ' + (state.user.email || 'you');
-      const nm = (state.user.user_metadata && state.user.user_metadata.full_name) || '';
-      $('pname').value = nm;
-      if (!nm) $('profile').open = true;
       $('ownerLink').hidden = true;
       sb.rpc('is_admin').then(function (r) { $('ownerLink').hidden = !(r && r.data === true); }, function () {});
       $('apass').value = '';
-      state.loaded = false; state.seen = null; state.last = null;
+      state.loaded = false; state.seen = null; state.last = null; state.profile = null; lastSeenSent = 0;
       renderAll();
       loadAll(false);
+      // Profile decides whether to ask for consent first. If it cannot be read, the app still opens.
+      let p = null, ok = false;
+      try {
+        const r = await sb.from('profiles').select('full_name,phone,city,user_type,bank,heard_from,is_adult,consent_at,consent_version').eq('user_id', uid).maybeSingle();
+        ok = !r.error; p = r.data;
+      } catch (e) { ok = false; }
+      if (!state.user || state.user.id !== uid) return;
+      state.profile = p || {};
+      if (ok && !(p && p.is_adult && p.consent_at && p.consent_version === CONSENT_VERSION)) {
+        $('cadult').checked = false; $('cagree').checked = false; $('consentMsg').textContent = '';
+        $('consentView').hidden = false;
+      } else {
+        showApp();
+      }
     } else {
       state.txs = []; state.tokens = []; state.loaded = false; state.seen = null;
       $('slow').value = ''; $('sbal').value = ''; $('newTok').hidden = true; $('tokText').textContent = '';
@@ -1028,7 +1240,7 @@ function parseSms(raw) {
     } catch (e) { state.user = null; }
     route();
     $('refreshBtn').addEventListener('click', function () { loading = false; loadAll(false); });
-    document.addEventListener('visibilitychange', function () { if (!document.hidden && state.user) loadAll(true); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && state.user) { loadAll(true); touchSeen(); } });
     setInterval(function () { if (!document.hidden && state.user) loadAll(true); }, 30000);
   }
   if ('serviceWorker' in navigator) {

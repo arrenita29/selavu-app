@@ -52,13 +52,13 @@ h2 { font: 600 17px/1.25 var(--f-body); margin: 0; }
     linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.16) 44px 45px, transparent 45px),
     var(--hero-bg);
   color: #fff; border-radius: 26px; padding: 22px 24px 22px 62px; box-shadow: 0 24px 48px -28px rgba(43,37,181,.9);
-  display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 18px; align-items: end;
+  display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(4, minmax(0, 1fr)); gap: 18px; align-items: end;
 }
 .band .k { font-size: 12.5px; color: var(--hero-mute); }
 .band .v { font: 600 22px/1.1 var(--f-display); letter-spacing: -0.02em; margin-top: 4px; }
 .band .big .v { font-size: clamp(36px, 8vw, 52px); letter-spacing: -0.04em; }
 @media (max-width: 720px) {
-  .band { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-left: 58px; }
+  .band { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-left: 58px; }
   .band .big { grid-column: 1 / -1; }
 }
 
@@ -102,6 +102,43 @@ td.num, th.num { text-align: right; }
   td.num { text-align: left; }
   td[data-k]::before { content: attr(data-k); display: block; font-size: 12px; color: var(--mute); }
 }
+
+/* filters */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.filters input { flex: 1 1 14rem; max-width: 22rem; }
+select { font: 15px/1.3 var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 9px 34px 9px 14px; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--mute) 50%), linear-gradient(135deg, var(--mute) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+select.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.linkbtn { font: 600 14px var(--f-body); color: var(--accent); background: none; border: 0; padding: 6px 4px; cursor: pointer; }
+
+/* charts: one hue, thin bars, values in ink */
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.charts .wide { grid-column: span 2; }
+@media (max-width: 980px) { .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .charts { grid-template-columns: minmax(0, 1fr); } .charts .wide { grid-column: auto; } }
+.ch h3 { font: 600 15px var(--f-body); margin: 0; }
+.ch .cap { color: var(--mute); font-size: 12.5px; margin: 2px 0 14px; }
+.hb { display: grid; grid-template-columns: minmax(5.5rem, 34%) minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; font-size: 13.5px; }
+.hb .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.hb .trk { height: 14px; position: relative; }
+.hb .bar { height: 100%; min-width: 3px; background: var(--accent); border-radius: 0 4px 4px 0; }
+.hb .val { color: var(--mute); font-size: 12.5px; text-align: right; white-space: nowrap; }
+.hb .hit { display: contents; }
+.vb { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; align-items: end; height: 150px; border-bottom: 1px solid var(--line); }
+.vb .col { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; cursor: default; }
+.vb .n { font-size: 12px; color: var(--mute); }
+.vb .bar { width: min(28px, 70%); min-height: 2px; background: var(--accent); border-radius: 4px 4px 0 0; }
+.vb .col:hover .bar, .hb .row:hover .bar { filter: brightness(1.15); }
+.vlabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-top: 6px; font-size: 11.5px; color: var(--mute); text-align: center; }
+.nodata { color: var(--mute); font-size: 13.5px; padding: 10px 0; }
+#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12.5px; border-radius: 8px; padding: 6px 9px; max-width: 16rem; box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+.sm { font-size: 12.5px; color: var(--mute); }
+td small.sm { white-space: nowrap; }
+@media (min-width: 761px) { td:first-child { min-width: 17rem; } .em { overflow-wrap: normal; word-break: normal; } }
+.chip.miss { color: var(--bad); background: var(--accent-soft); }
 
 /* sign in */
 .tabs-lead { color: var(--mute); margin: 6px 0 14px; }
@@ -157,28 +194,48 @@ label { display: block; font: 500 13px var(--f-body); color: var(--mute); margin
     <div><div class="k">Joined this week</div><div class="v" id="nNew">0</div></div>
     <div><div class="k">Active in 7 days</div><div class="v" id="nActive">0</div></div>
     <div><div class="k">Auto-add on phone</div><div class="v" id="nPhone">0</div></div>
+    <div><div class="k">SMS read correctly</div><div class="v" id="nRead">–</div></div>
+  </section>
+
+  <div class="filters" role="group" aria-label="Filter customers">
+    <input id="q" type="search" placeholder="Search name, email, phone" aria-label="Search customers" autocomplete="off">
+    <select id="fType" aria-label="Filter by type"><option value="">Everyone</option></select>
+    <select id="fCity" aria-label="Filter by city"><option value="">All cities</option></select>
+    <select id="fBank" aria-label="Filter by bank"><option value="">All banks</option></select>
+    <button type="button" class="linkbtn" id="fClear" hidden>Clear filters</button>
+  </div>
+
+  <section class="charts" aria-label="Charts">
+    <div class="card ch wide"><h3>Sign-ups per week</h3><p class="cap">Last 8 weeks</p><div id="cWeeks"></div></div>
+    <div class="card ch"><h3>Who they are</h3><p class="cap">From their profile</p><div id="cType"></div></div>
+    <div class="card ch"><h3>Top cities</h3><p class="cap">Customers per city</p><div id="cCity"></div></div>
+    <div class="card ch"><h3>How they found Selavu</h3><p class="cap">From their profile</p><div id="cHeard"></div></div>
+    <div class="card ch"><h3>Devices</h3><p class="cap">Where they last opened Selavu</p><div id="cDevice"></div></div>
+    <div class="card ch wide"><h3>SMS read correctly, by bank</h3><p class="cap">All customers. Banks with failures are the ones to fix in the reader.</p><div id="cBank"></div></div>
+    <div class="card ch"><h3>Main bank</h3><p class="cap">From their profile</p><div id="cMainBank"></div></div>
   </section>
 
   <section class="card">
     <div class="bar">
-      <h2>All customers</h2>
-      <input class="search" id="q" type="search" placeholder="Search name or email" aria-label="Search customers" autocomplete="off">
+      <h2 id="listTitle">All customers</h2>
     </div>
     <table>
       <thead><tr>
         <th><button type="button" data-sort="name">Customer</button></th>
+        <th>About</th>
+        <th>Bank · device</th>
         <th><button type="button" data-sort="joined_at" aria-sort="descending">Joined</button></th>
-        <th><button type="button" data-sort="last_sign_in_at">Last sign-in</button></th>
+        <th><button type="button" data-sort="last_active">Last active</button></th>
         <th class="num"><button type="button" data-sort="entries">Entries</button></th>
-        <th class="num"><button type="button" data-sort="phones">Phones</button></th>
-        <th>Email</th>
+        <th>Status</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <p class="empty" id="empty" hidden></p>
   </section>
-  <p class="note">You see each customer's name, email and activity. Their expenses and balances stay private to them.</p>
+  <p class="note">You see each customer's profile and activity. Their amounts, payees and balances stay private to them.</p>
 </main>
+<div id="tip" role="tooltip" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
@@ -189,14 +246,21 @@ label { display: block; font: 500 13px var(--f-body); color: var(--mute); margin
   const $ = function (id) { return document.getElementById(id); };
   const views = ['loadView', 'authView', 'denyView', 'dashView'];
   function show(v) { views.forEach(function (x) { $(x).hidden = x !== v; }); }
-  let sb = null, all = [], sortKey = 'joined_at', sortDir = -1;
+  let sb = null, all = [], banks = [], sortKey = 'joined_at', sortDir = -1;
 
+  const TYPES = { student: 'Student', working: 'Working', self_employed: 'Self-employed', other: 'Other' };
+  const DEVICES = { iphone: 'iPhone', android: 'Android', desktop: 'Computer', other: 'Other' };
   const DAY = 864e5;
   const dfmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const sfmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' });
   const tfmt = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' });
-  function ago(iso) {
-    if (!iso) return { main: 'Never', sub: '' };
-    const d = new Date(iso), diff = Date.now() - d.getTime();
+  const ms = function (iso) { return iso ? new Date(iso).getTime() : 0; };
+  function lastActive(c) { return Math.max(ms(c.last_seen_at), ms(c.last_sign_in_at), ms(c.last_entry_at)) || null; }
+  function cityKey(c) { const t = (c.city || '').trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; }
+
+  function ago(t) {
+    if (!t) return { main: 'Never', sub: '' };
+    const d = new Date(t), diff = Date.now() - d.getTime();
     let main;
     if (diff < 60e3) main = 'Just now';
     else if (diff < 3600e3) main = Math.floor(diff / 60e3) + ' min ago';
@@ -216,58 +280,173 @@ label { display: block; font: 500 13px var(--f-body); color: var(--mute); margin
     if (attrs) Object.keys(attrs).forEach(function (k) {
       if (k === 'class') n.className = attrs[k]; else if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]);
     });
-    (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
     return n;
   }
-  function whenCell(label, iso) {
-    const a = ago(iso);
-    const td = el('td', { class: 'when', 'data-k': label });
-    td.appendChild(document.createTextNode(a.main));
-    if (a.sub) td.appendChild(el('small', { text: a.sub }));
-    return td;
+  function whenCell(label, t) {
+    const a = ago(t);
+    return el('td', { class: 'when', 'data-k': label }, [a.main, a.sub ? el('small', { text: a.sub }) : null]);
   }
 
+  /* ---------- tooltip ---------- */
+  const tip = $('tip');
+  function tipOn(node, text) {
+    node.addEventListener('pointerenter', function () { tip.textContent = text; tip.hidden = false; });
+    node.addEventListener('pointermove', function (e) {
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      let x = e.clientX + 12, y = e.clientY - h - 10;
+      if (x + w > innerWidth - 8) x = e.clientX - w - 12;
+      if (y < 8) y = e.clientY + 16;
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    });
+    node.addEventListener('pointerleave', function () { tip.hidden = true; });
+  }
+
+  /* ---------- filters ---------- */
+  function filtered() {
+    const q = $('q').value.trim().toLowerCase(), ft = $('fType').value, fc = $('fCity').value, fb = $('fBank').value;
+    return all.filter(function (c) {
+      if (q && !((c.full_name || '') + ' ' + (c.email || '') + ' ' + (c.phone || '')).toLowerCase().includes(q)) return false;
+      if (ft && (ft === '-' ? c.user_type : c.user_type !== ft)) return false;
+      if (fc && (fc === '-' ? cityKey(c) : cityKey(c) !== fc)) return false;
+      if (fb && (fb === '-' ? c.bank : c.bank !== fb)) return false;
+      return true;
+    });
+  }
+  function fillSelect(sel, values, labelFor) {
+    const keep = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    values.forEach(function (v) { sel.appendChild(el('option', { value: v, text: labelFor ? labelFor(v) : v })); });
+    sel.appendChild(el('option', { value: '-', text: 'Not filled in' }));
+    sel.value = keep;
+  }
+  function countBy(list, key) {
+    const m = new Map();
+    list.forEach(function (c) { const k = key(c); if (k) m.set(k, (m.get(k) || 0) + 1); });
+    return Array.from(m.entries()).sort(function (a, b) { return b[1] - a[1] || String(a[0]).localeCompare(String(b[0])); });
+  }
+
+  /* ---------- charts ---------- */
+  function hbars(rootId, rows, opt) {
+    const root = $(rootId); root.textContent = '';
+    opt = opt || {};
+    if (!rows.length) { root.appendChild(el('p', { class: 'nodata', text: opt.empty || 'No answers yet.' })); return; }
+    const max = opt.max || Math.max.apply(null, rows.map(function (r) { return r.v; })) || 1;
+    const box = el('div', { class: 'hb' });
+    rows.forEach(function (r) {
+      const lab = el('div', { class: 'lab', text: r.label, title: r.label });
+      const bar = el('div', { class: 'bar', style: 'width:' + Math.max(0, Math.min(100, r.v / max * 100)) + '%' });
+      const trk = el('div', { class: 'trk' }, [bar]);
+      const val = el('div', { class: 'val', text: r.text });
+      [lab, trk, val].forEach(function (n) { box.appendChild(n); tipOn(n, r.tip || (r.label + ': ' + r.text)); });
+    });
+    root.appendChild(box);
+  }
+  function topWithOther(pairs, n, total) {
+    const top = pairs.slice(0, n), rest = pairs.slice(n).reduce(function (s, p) { return s + p[1]; }, 0);
+    const rows = top.map(function (p) { return { label: p[0], v: p[1], text: String(p[1]), tip: p[0] + ': ' + p[1] + ' of ' + total + ' customers' }; });
+    if (rest) rows.push({ label: 'Others', v: rest, text: String(rest), tip: (pairs.length - n) + ' more: ' + rest + ' customers' });
+    return rows;
+  }
+  function weeks(list) {
+    const root = $('cWeeks'); root.textContent = '';
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const start = new Date(now); start.setDate(now.getDate() - ((now.getDay() + 6) % 7)); // this Monday
+    const cols = [];
+    for (let i = 7; i >= 0; i--) {
+      const a = new Date(start); a.setDate(start.getDate() - 7 * i);
+      const b = new Date(a); b.setDate(a.getDate() + 7);
+      cols.push({ a: a, b: b, n: list.filter(function (c) { const t = ms(c.joined_at); return t >= a && t < b; }).length });
+    }
+    const max = Math.max.apply(null, cols.map(function (c) { return c.n; })) || 1;
+    const bars = el('div', { class: 'vb' }), labs = el('div', { class: 'vlabs' });
+    cols.forEach(function (c, i) {
+      const end = new Date(c.b); end.setDate(end.getDate() - 1);
+      const col = el('div', { class: 'col' }, [
+        el('div', { class: 'n', text: c.n ? String(c.n) : '' }),
+        el('div', { class: 'bar', style: 'height:' + (c.n / max * 118) + 'px' })
+      ]);
+      tipOn(col, 'Week of ' + sfmt.format(c.a) + ' to ' + sfmt.format(end) + ': ' + c.n + (c.n === 1 ? ' sign-up' : ' sign-ups'));
+      bars.appendChild(col);
+      labs.appendChild(el('div', { text: i === 7 ? 'This week' : sfmt.format(c.a) }));
+    });
+    root.appendChild(bars); root.appendChild(labs);
+  }
+  function charts(list) {
+    const total = list.length;
+    weeks(list);
+    hbars('cType', countBy(list, function (c) { return TYPES[c.user_type]; }).map(function (p) {
+      return { label: p[0], v: p[1], text: Math.round(p[1] / total * 100) + '%', tip: p[0] + ': ' + p[1] + ' of ' + total + ' customers' };
+    }), { max: total });
+    hbars('cCity', topWithOther(countBy(list, cityKey), 6, total));
+    hbars('cHeard', topWithOther(countBy(list, function (c) { return c.heard_from; }), 6, total));
+    hbars('cDevice', countBy(list, function (c) { return DEVICES[c.device]; }).map(function (p) {
+      return { label: p[0], v: p[1], text: String(p[1]), tip: p[0] + ': ' + p[1] + ' of ' + total + ' customers' };
+    }), { empty: 'Shows up once customers open the new version.' });
+    hbars('cMainBank', topWithOther(countBy(list, function (c) { return c.bank; }), 6, total));
+    hbars('cBank', banks.map(function (b) {
+      const n = Number(b.read_ok) + Number(b.failed), ok = Number(b.read_ok);
+      const pct = n ? Math.round(ok / n * 100) : 0;
+      return { label: b.bank, v: pct, text: pct + '%' + (Number(b.failed) ? ' · ' + b.failed + ' failed' : ''), tip: b.bank + ': ' + ok + ' of ' + n + ' SMS read correctly' };
+    }).slice(0, 8), { max: 100, empty: 'No SMS entries yet.' });
+  }
+
+  /* ---------- table ---------- */
   function render() {
-    const q = $('q').value.trim().toLowerCase();
-    const list = all.filter(function (c) {
-      return !q || (c.full_name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
-    }).sort(function (a, b) {
-      let x = a[sortKey], y = b[sortKey];
+    const list = filtered();
+    const active = !!($('q').value || $('fType').value || $('fCity').value || $('fBank').value);
+    $('fClear').hidden = !active;
+    ['fType', 'fCity', 'fBank'].forEach(function (id) { $(id).classList.toggle('on', !!$(id).value); });
+    $('listTitle').textContent = active ? list.length + ' of ' + all.length + ' customers' : 'All customers';
+    summary(list);
+    charts(list);
+
+    const sorted = list.slice().sort(function (a, b) {
+      let x, y;
       if (sortKey === 'name') { x = (a.full_name || a.email || '').toLowerCase(); y = (b.full_name || b.email || '').toLowerCase(); }
-      if (sortKey === 'entries' || sortKey === 'phones') { x = Number(x) || 0; y = Number(y) || 0; }
-      if (x == null) return 1; if (y == null) return -1;
+      else if (sortKey === 'last_active') { x = lastActive(a) || 0; y = lastActive(b) || 0; }
+      else if (sortKey === 'entries') { x = Number(a.entries) || 0; y = Number(b.entries) || 0; }
+      else { x = ms(a[sortKey]); y = ms(b[sortKey]); }
       return (x > y ? 1 : x < y ? -1 : 0) * sortDir;
     });
     const tb = $('rows'); tb.textContent = '';
-    list.forEach(function (c) {
+    sorted.forEach(function (c) {
       const nameEl = el('div', { class: 'nm' + (c.full_name ? '' : ' none'), text: c.full_name || 'No name yet' });
       if (c.is_owner) nameEl.appendChild(el('span', { class: 'chip owner', text: 'You' }));
+      const contact = el('div', { class: 'em', text: c.email || '' });
+      const about = [TYPES[c.user_type], cityKey(c)].filter(Boolean).join(', ');
+      const bd = [c.bank, DEVICES[c.device]].filter(Boolean).join(' · ');
+      const smsShare = Number(c.entries) ? Math.round(Number(c.sms_entries) / Number(c.entries) * 100) + '% from SMS' : '';
+      const status = el('td', { 'data-k': 'Status' }, [
+        el('span', { class: 'chip ' + (c.verified ? 'ok' : 'wait'), text: c.verified ? 'Verified' : 'Email not confirmed' })
+      ]);
+      if (!c.consent_at) { status.appendChild(document.createTextNode(' ')); status.appendChild(el('span', { class: 'chip miss', text: 'No consent yet' })); }
       tb.appendChild(el('tr', null, [
         el('td', null, [el('div', { class: 'who' }, [
           el('div', { class: 'av', 'aria-hidden': 'true', text: initials(c) }),
-          el('div', null, [nameEl, el('div', { class: 'em', text: c.email || '' })])
+          el('div', null, [nameEl, contact, c.phone ? el('div', { class: 'em', text: c.phone }) : null])
         ])]),
-        whenCell('Joined', c.joined_at),
-        whenCell('Last sign-in', c.last_sign_in_at),
-        el('td', { class: 'num', 'data-k': 'Entries', text: String(c.entries || 0) }),
-        el('td', { class: 'num', 'data-k': 'Phones', text: String(c.phones || 0) }),
-        el('td', { 'data-k': 'Email' }, [el('span', { class: 'chip ' + (c.verified ? 'ok' : 'wait'), text: c.verified ? 'Verified' : 'Not confirmed' })])
+        el('td', { 'data-k': 'About', class: about ? '' : 'sm', text: about || 'Not filled in' }),
+        el('td', { 'data-k': 'Bank · device', class: bd ? '' : 'sm', text: bd || '–' }),
+        whenCell('Joined', ms(c.joined_at)),
+        whenCell('Last active', lastActive(c)),
+        el('td', { class: 'num', 'data-k': 'Entries' }, [String(c.entries || 0), smsShare ? el('small', { class: 'sm', style: 'display:block', text: smsShare }) : null]),
+        status
       ]));
     });
     const e = $('empty');
-    e.hidden = list.length > 0;
-    e.textContent = all.length ? 'No customer matches "' + $('q').value.trim() + '".' : 'No customers yet. Share your app link to get your first sign-up.';
+    e.hidden = sorted.length > 0;
+    e.textContent = all.length ? 'No customer matches these filters.' : 'No customers yet. Share your app link to get your first sign-up.';
   }
 
-  function summary() {
+  function summary(list) {
     const now = Date.now();
-    $('nAll').textContent = all.length;
-    $('nNew').textContent = all.filter(function (c) { return now - new Date(c.joined_at) < 7 * DAY; }).length;
-    $('nActive').textContent = all.filter(function (c) {
-      const t = Math.max(c.last_sign_in_at ? +new Date(c.last_sign_in_at) : 0, c.last_entry_at ? +new Date(c.last_entry_at) : 0);
-      return now - t < 7 * DAY;
-    }).length;
-    $('nPhone').textContent = all.filter(function (c) { return Number(c.phones) > 0; }).length;
+    $('nAll').textContent = list.length;
+    $('nNew').textContent = list.filter(function (c) { return now - ms(c.joined_at) < 7 * DAY; }).length;
+    $('nActive').textContent = list.filter(function (c) { return now - (lastActive(c) || 0) < 7 * DAY; }).length;
+    $('nPhone').textContent = list.filter(function (c) { return Number(c.phones) > 0; }).length;
+    const ok = banks.reduce(function (s, b) { return s + Number(b.read_ok); }, 0), bad = banks.reduce(function (s, b) { return s + Number(b.failed); }, 0);
+    $('nRead').textContent = ok + bad ? Math.round(ok / (ok + bad) * 100) + '%' : '–';
   }
 
   async function load() {
@@ -280,20 +459,26 @@ label { display: block; font: 500 13px var(--f-body); color: var(--mute); margin
       $('denyWho').textContent = 'You are signed in as ' + user.email + '.';
       show('denyView'); return;
     }
-    const r = await sb.rpc('admin_list_customers');
+    const res = await Promise.all([sb.rpc('admin_list_customers'), sb.rpc('admin_bank_stats')]);
     show('dashView');
-    if (r.error) { $('empty').hidden = false; $('empty').className = 'msg bad'; $('empty').textContent = 'Could not load customers. Reload the page.'; return; }
-    all = r.data || [];
-    summary(); render();
+    if (res[0].error) { $('empty').hidden = false; $('empty').className = 'msg bad'; $('empty').textContent = 'Could not load customers. Run customer-details.sql in Supabase, then reload.'; return; }
+    all = res[0].data || [];
+    banks = res[1].error ? [] : (res[1].data || []);
+    fillSelect($('fType'), Object.keys(TYPES), function (k) { return TYPES[k]; });
+    fillSelect($('fCity'), countBy(all, cityKey).map(function (p) { return p[0]; }));
+    fillSelect($('fBank'), countBy(all, function (c) { return c.bank; }).map(function (p) { return p[0]; }));
+    render();
   }
 
   function csv() {
-    const head = ['name', 'email', 'joined', 'last_sign_in', 'entries', 'phones', 'email_confirmed'];
-    const esc = function (v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    const lines = [head.join(',')].concat(all.map(function (c) {
-      return [c.full_name, c.email, c.joined_at, c.last_sign_in_at, c.entries, c.phones, c.verified ? 'yes' : 'no'].map(esc).join(',');
-    }));
-    const a = el('a', { href: URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' })), download: 'selavu-customers.csv' });
+    const head = ['name', 'email', 'phone', 'city', 'type', 'main_bank', 'heard_from', 'device', 'joined', 'last_active', 'entries', 'sms_entries', 'manual_entries', 'phones', 'unread_sms', 'email_confirmed', 'consent_at'];
+    const esc = function (v) { v = v == null ? '' : String(v); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const rows = filtered().map(function (c) {
+      const la = lastActive(c);
+      return [c.full_name, c.email, c.phone, c.city, TYPES[c.user_type] || '', c.bank, c.heard_from, DEVICES[c.device] || '', c.joined_at,
+        la ? new Date(la).toISOString() : '', c.entries, c.sms_entries, c.manual_entries, c.phones, c.failures, c.verified ? 'yes' : 'no', c.consent_at].map(esc).join(',');
+    });
+    const a = el('a', { href: URL.createObjectURL(new Blob([[head.join(',')].concat(rows).join('\n')], { type: 'text/csv' })), download: 'selavu-customers.csv' });
     document.body.appendChild(a); a.click(); a.remove();
   }
 
@@ -318,6 +503,8 @@ label { display: block; font: 500 13px var(--f-body); color: var(--mute); margin
   $('denyOut').addEventListener('click', signOut);
   $('csvBtn').addEventListener('click', csv);
   $('q').addEventListener('input', render);
+  ['fType', 'fCity', 'fBank'].forEach(function (id) { $(id).addEventListener('change', render); });
+  $('fClear').addEventListener('click', function () { $('q').value = ''; $('fType').value = ''; $('fCity').value = ''; $('fBank').value = ''; render(); });
   document.querySelectorAll('th button[data-sort]').forEach(function (b) {
     b.addEventListener('click', function () {
       const k = b.dataset.sort;

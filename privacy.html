@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Selavu · Privacy note</title>
+<meta name="description" content="What Selavu stores about you, why, and how to delete it.">
+<meta name="theme-color" content="#E8EAF4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0F24" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Onest:wght@400;500;600;700&display=swap">
+<style>
+:root { --bg: #E8EAF4; --surface: #FFFFFF; --ink: #191A3D; --mute: #63668A; --line: #DCDFEE; --accent: #3D35E0; --accent-soft: #E6E4FF; --good: #12946B; --bad: #D63B63; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0E0F24; --surface: #171936; --ink: #ECEDFF; --mute: #9A9DC4; --line: #272A52; --accent: #8F8AFF; --accent-soft: #24245A; --good: #4FD6A4; --bad: #FF7C9B; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) 64px max(18px, env(safe-area-inset-left, 0px)); }
+main { max-width: 40rem; margin: 0 auto; }
+.brand { font: 700 22px/1 'Unbounded', system-ui, sans-serif; color: var(--accent); text-decoration: none; }
+h1 { font: 700 clamp(26px, 6vw, 34px)/1.15 'Unbounded', system-ui, sans-serif; letter-spacing: -0.02em; margin: 28px 0 8px; }
+.updated { color: var(--mute); font-size: 14px; margin: 0 0 24px; }
+.lead { font-size: 18px; margin: 0 0 28px; }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; margin: 0 0 14px; }
+h2 { font-size: 18px; font-weight: 600; margin: 0 0 8px; }
+p { margin: 8px 0 0; }
+ul { margin: 8px 0 0; padding-left: 20px; }
+li { margin: 6px 0; }
+li::marker { color: var(--accent); }
+.never li::marker { color: var(--bad); }
+.muted { color: var(--mute); }
+a { color: var(--accent); font-weight: 600; }
+.back { display: inline-block; margin-top: 18px; text-decoration: none; background: var(--accent); color: #fff; border-radius: 14px; padding: 12px 18px; }
+@media (prefers-color-scheme: dark) { .back { color: #0E0F24; } }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="./">Selavu</a>
+  <h1>Privacy note</h1>
+  <p class="updated">Last updated 7 November 2026 · version v1-2026-11</p>
+  <p class="lead">Selavu turns your bank SMS into expense entries and keeps your balance up to date. This note lists exactly what it stores, why, and how you can delete it.</p>
+
+  <section>
+    <h2>What Selavu stores</h2>
+    <ul>
+      <li><strong>Your account:</strong> name, email, and your password (stored only in scrambled form by our login provider, never readable).</li>
+      <li><strong>Your profile, if you fill it in:</strong> phone number, city, whether you're a student or working, your main bank, and how you heard about Selavu.</li>
+      <li><strong>Your entries:</strong> amount, spent or received, who it was paid to, category, date and time, the balance your bank reported, and the bank's name.</li>
+      <li><strong>Your phone tokens:</strong> a label like "iPhone" and when it was last used. The token itself is stored only in scrambled form.</li>
+      <li><strong>Activity:</strong> when you last opened the app and the kind of device (iPhone, Android or computer).</li>
+      <li><strong>Bank SMS Selavu couldn't read:</strong> only the bank's name and the time, so we know which bank formats to fix.</li>
+      <li><strong>Your consent:</strong> that you're 18 or older and when you agreed to this note.</li>
+    </ul>
+  </section>
+
+  <section class="never">
+    <h2>What Selavu never stores</h2>
+    <ul>
+      <li>The text of your bank SMS. Selavu reads it, keeps the details above, and throws the message away. Only a one-way fingerprint of it is kept, which can't be turned back into the text, so the same SMS isn't added twice.</li>
+      <li>Card numbers, full account numbers, OTPs, UPI PINs, Aadhaar or PAN.</li>
+      <li>Your contacts, location or other messages.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Why</h2>
+    <ul>
+      <li>To show your expenses and balance, and warn you when the balance is low.</li>
+      <li>To add entries automatically from your phone.</li>
+      <li>To understand how Selavu is used (sign-ups, active users, which banks to support) and improve it.</li>
+      <li>To contact you about your account if needed.</li>
+    </ul>
+    <p class="muted">Selavu does not sell your data, show ads, or share your details with anyone else.</p>
+  </section>
+
+  <section>
+    <h2>Who can see it</h2>
+    <ul>
+      <li><strong>You</strong> see everything in your account.</li>
+      <li><strong>The Selavu owner</strong> can see your name, email, profile details, when you joined and were last active, your device type, and how many entries you have. The owner <strong>cannot</strong> see your amounts, who you paid, or your balance.</li>
+      <li>Nobody else. Every customer's data is locked to their own account.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Where it's kept and for how long</h2>
+    <p>Your data is stored with Supabase, our database provider, over an encrypted connection. It's kept until you delete your account.</p>
+  </section>
+
+  <section>
+    <h2>Your choices</h2>
+    <ul>
+      <li><strong>See and change your details</strong> any time in the app, under "Your profile".</li>
+      <li><strong>Delete your account</strong> in "Your profile". This immediately and permanently removes your account and every entry, token and profile detail.</li>
+      <li><strong>Withdraw your consent</strong> by deleting your account. It's as easy as signing up.</li>
+      <li><strong>Selavu is only for people aged 18 and older.</strong></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Questions or complaints</h2>
+    <p>Email <a href="mailto:arrenita29@gmail.com">arrenita29@gmail.com</a>. You'll get a reply within 7 days. If this note changes, you'll be asked to agree to the new version the next time you open the app.</p>
+  </section>
+
+  <a class="back" href="./">Back to Selavu</a>
+</main>
+</body>
+</html>
