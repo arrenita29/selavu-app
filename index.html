@@ -8,8 +8,9 @@
 <meta name="theme-color" content="#E8EAF4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E0F24" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="48x48" href="selavu-favicon-48-v2.png">
+<link rel="icon" type="image/png" sizes="192x192" href="selavu-icon-192-v2.png">
+<link rel="apple-touch-icon" href="selavu-apple-touch-180-v2.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Selavu">
@@ -215,6 +216,20 @@ select { appearance: none; -webkit-appearance: none; cursor: pointer;
 .footlinks { display: flex; justify-content: center; gap: 16px; font-size: 12px; color: var(--mute); margin: 0; }
 #consentView .card h2 { font-size: 19px; }
 
+/* "check your email" popup */
+dialog.pop { border: 0; padding: 0; background: transparent; max-width: min(24rem, calc(100vw - 32px)); width: 100%; }
+dialog.pop::backdrop { background: rgba(14, 15, 36, .55); backdrop-filter: blur(3px); }
+.popcard { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 24px; padding: 24px 22px 20px; box-shadow: 0 30px 60px -20px rgba(14,15,36,.6); }
+.popicon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 14px; }
+.popcard h2 { font: 700 20px/1.2 var(--f-display); letter-spacing: -0.01em; margin: 0 0 8px; }
+.popcard p { margin: 0; color: var(--mute); }
+.popcard p strong { color: var(--ink); overflow-wrap: anywhere; }
+.popcard ol { margin: 14px 0 4px; padding-left: 20px; }
+.popcard li { margin: 6px 0; }
+.authnote { border-radius: 14px; padding: 12px 14px; margin: 0 0 14px; font-size: 14px; }
+.authnote.ok { background: rgba(18,148,107,.12); color: var(--credit); }
+.authnote.warn { background: rgba(214,59,99,.10); color: var(--debit); }
+
 /* sign-in screen */
 #authView .top { margin-top: 6vh; }
 #authView h1 { font-size: 34px; }
@@ -235,6 +250,7 @@ select { appearance: none; -webkit-appearance: none; cursor: pointer;
         <button type="button" role="tab" id="tabIn" aria-selected="true">Sign in</button>
         <button type="button" role="tab" id="tabUp" aria-selected="false">Create account</button>
       </div>
+      <p class="authnote" id="authNote" role="status" hidden></p>
       <p class="lead" id="authLead">Sign in to see your expenses and balance.</p>
       <div id="nameWrap" hidden>
         <label class="fl" for="aname">Your name</label>
@@ -254,6 +270,23 @@ select { appearance: none; -webkit-appearance: none; cursor: pointer;
     </div>
     <p class="footlinks" style="margin-top:14px"><a href="privacy.html">Privacy note</a></p>
   </section>
+
+  <!-- shown once after Create account -->
+  <dialog class="pop" id="mailPop" aria-labelledby="mailPopTitle">
+    <div class="popcard">
+      <div class="popicon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+      </div>
+      <h2 id="mailPopTitle">Confirm your email</h2>
+      <p>We sent a link to <strong id="mailPopTo"></strong>.</p>
+      <ol>
+        <li>Open the email from <strong>Selavu</strong>. Check spam too.</li>
+        <li>Tap the link <strong>once</strong>.</li>
+        <li>You'll come back here to sign in.</li>
+      </ol>
+      <button type="button" class="primary" id="mailPopOk">OK, I'll check my email</button>
+    </div>
+  </dialog>
 
   <!-- signed in, but has not agreed to the privacy note yet -->
   <section id="consentView" hidden>
@@ -1126,6 +1159,33 @@ function parseSms(raw) {
   });
   $('consentOut').addEventListener('click', async function () { await sb.auth.signOut(); });
 
+  /* ---------- confirm-your-email popup and the page the email link opens ---------- */
+  function showMailPop(email) {
+    const d = $('mailPop');
+    $('mailPopTo').textContent = email;
+    if (d.showModal) { try { d.showModal(); return; } catch (e) { /* falls through */ } }
+    d.setAttribute('open', '');
+  }
+  $('mailPopOk').addEventListener('click', function () { const d = $('mailPop'); if (d.close) d.close(); else d.removeAttribute('open'); $('apass').focus(); });
+  function authNote(text, kind) {
+    const n = $('authNote');
+    if (!text) { n.hidden = true; return; }
+    n.textContent = text; n.className = 'authnote ' + kind; n.hidden = false;
+  }
+  // The confirmation link brings people back with details in the address. Read them before Supabase does,
+  // so the person lands on Sign in (not straight inside the app), then clean the address bar.
+  const landing = (function () {
+    const h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const q = new URLSearchParams(location.search || '');
+    const type = h.get('type') || q.get('type');
+    const err = h.get('error_code') || q.get('error_code') || h.get('error') || q.get('error');
+    if (!type && !err) return null;
+    history.replaceState(null, '', location.pathname);
+    if (err) return 'error';
+    if (type === 'signup' || type === 'email' || type === 'email_change') return 'confirmed';
+    return null;
+  })();
+
   /* ---------- auth ---------- */
   let mode = 'in';
   function setMode(m) {
@@ -1145,7 +1205,8 @@ function parseSms(raw) {
     const m = (e && e.message) || '';
     if (/invalid login/i.test(m)) return 'Email or password is wrong.';
     if (/already registered|already been registered/i.test(m)) return 'This email already has an account. Tap Sign in.';
-    if (/not confirmed/i.test(m)) return 'Confirm your email first: open the link we sent (check spam).';
+    if (/not confirmed/i.test(m)) return 'Confirm your email first: open the email from Selavu (check spam) and tap the link once. Then sign in.';
+    if (mode === 'up' && /only request this after|email rate limit|over_email_send/i.test(m)) return 'We already sent you a confirmation email. Open it (check spam too), tap the link once, then sign in here.';
     if (/rate limit|too many|seconds/i.test(m)) return 'Too many tries. Wait a minute and try again.';
     if (/password/i.test(m)) return 'Choose a stronger password (at least 8 characters).';
     if (/fetch|network|failed/i.test(m)) return friendlyNet();
@@ -1168,9 +1229,18 @@ function parseSms(raw) {
         if (!name) { msg.textContent = 'Enter your name.'; return; }
         if (!$('aadult').checked) { msg.textContent = 'Selavu is only for people aged 18 and older.'; return; }
         if (!$('aagree').checked) { msg.textContent = 'Tick the box to agree to the privacy note.'; return; }
-        const r = await sb.auth.signUp({ email: email, password: password, options: { data: { full_name: name, is_adult: 'true', consent_version: CONSENT_VERSION } } });
+        const appUrl = location.origin + location.pathname.replace(/index\.html$/, '');
+        const r = await sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: appUrl, data: { full_name: name, is_adult: 'true', consent_version: CONSENT_VERSION } } });
         if (r.error) throw r.error;
-        if (!r.data.session) { msg.textContent = 'Account created. Check your email, open the confirmation link, then sign in.'; msg.style.color = 'var(--mute)'; return; }
+        if (!r.data.session) {
+          // Switch to Sign in so a second tap can't trigger another email, and keep the email filled in.
+          setMode('in');
+          $('apass').value = '';
+          msg.style.color = 'var(--mute)';
+          msg.textContent = 'Waiting for you to confirm ' + email + '. After tapping the link in the email, sign in here.';
+          showMailPop(email);
+          return;
+        }
       }
     } catch (e) { msg.style.color = ''; msg.textContent = authError(e); }
     finally { $('authGo').disabled = false; }
@@ -1234,11 +1304,27 @@ function parseSms(raw) {
       const now = state.user ? state.user.id : null;
       if (was !== now) route();
     });
+    if (landing === 'confirmed') {
+      // The email is confirmed on the server already. Show Sign in instead of logging in from the link.
+      try { await sb.auth.signOut({ scope: 'local' }); } catch (e) { /* nothing to sign out */ }
+      state.user = null;
+      route();
+      setMode('in');
+      authNote('Email confirmed ✅ Now sign in with your email and password.', 'ok');
+      return startTimers();
+    }
     try {
       const r = await sb.auth.getSession();
       state.user = r.data && r.data.session ? r.data.session.user : null;
     } catch (e) { state.user = null; }
     route();
+    if (landing === 'error' && !state.user) {
+      setMode('in');
+      authNote('That link was already used or has expired. If you already tapped it once, your email is confirmed: just sign in.', 'warn');
+    }
+    startTimers();
+  }
+  function startTimers() {
     $('refreshBtn').addEventListener('click', function () { loading = false; loadAll(false); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden && state.user) { loadAll(true); touchSeen(); } });
     setInterval(function () { if (!document.hidden && state.user) loadAll(true); }, 30000);

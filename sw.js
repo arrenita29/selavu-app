@@ -1,7 +1,7 @@
 // Network first, so a new version of the page shows up as soon as you are online.
 // The cached copy only opens the app when offline. Data requests (Supabase) are never cached.
-const CACHE = 'selavu-shell-v3';
-const SHELL = ['./', 'index.html', 'admin.html', 'privacy.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const CACHE = 'selavu-shell-v4';
+const SHELL = ['./', 'index.html', 'admin.html', 'privacy.html', 'manifest.webmanifest', 'selavu-icon-192-v2.png', 'selavu-icon-512-v2.png', 'selavu-icon-maskable-512-v2.png', 'selavu-apple-touch-180-v2.png', 'selavu-favicon-48-v2.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
 });
