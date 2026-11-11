@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Selavu</title>
+<meta name="description" content="Selavu: your bank SMS becomes expenses, and your balance is always up to date.">
+<meta name="theme-color" content="#E8EAF4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0F24" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="selavu-favicon-48-v2.png">
+<link rel="icon" type="image/png" sizes="192x192" href="selavu-icon-192-v2.png">
+<link rel="apple-touch-icon" href="selavu-apple-touch-180-v2.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Selavu">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Onest:wght@400;500;600;700&display=swap">
+<style>
+[hidden] { display: none !important; }
+html { color-scheme: light; -webkit-text-size-adjust: 100%; }
+/* "Passbook ink": cool paper, ballpoint indigo, and a balance card ruled like a bank passbook page. */
+:root {
+  --bg: #E8EAF4;
+  --surface: #FFFFFF;
+  --field: #F3F4FA;
+  --ink: #191A3D;
+  --mute: #63668A;
+  --line: #DCDFEE;
+  --accent: #3D35E0;
+  --accent-soft: #E6E4FF;
+  --accent-ink: #FFFFFF;
+  --hero-bg: #2B25B5;
+  --hero-fg: #FFFFFF;
+  --hero-mute: #C3C0FF;
+  --hero-rule: rgba(255,255,255,.09);
+  --low-bg: #B92E4B;
+  --low-fg: #FFF4F6;
+  --low-mute: #FFC9D4;
+  --debit: #D63B63;
+  --credit: #12946B;
+  --shadow: 0 1px 0 rgba(25,26,61,.04), 0 12px 32px -18px rgba(43,37,181,.35);
+  --f-display: 'Unbounded', system-ui, sans-serif;
+  --f-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E0F24; --surface: #171936; --field: #11132B; --ink: #ECEDFF; --mute: #9A9DC4; --line: #272A52;
+    --accent: #8F8AFF; --accent-soft: #24245A; --accent-ink: #0E0F24;
+    --hero-bg: #2B25B5; --hero-fg: #FFFFFF; --hero-mute: #C3C0FF;
+    --low-bg: #8E2238; --low-fg: #FFF4F6; --low-mute: #FFC1CE;
+    --debit: #FF7C9B; --credit: #4FD6A4; --shadow: 0 12px 32px -20px rgba(0,0,0,.8);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--f-body);
+  font-variant-numeric: tabular-nums;
+  padding-block: max(20px, env(safe-area-inset-top, 0px)) max(56px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  min-height: 100vh;
+}
+button { font-family: inherit; }
+.wrap { max-width: 34rem; margin: 0 auto; display: grid; gap: 16px; }
+h1 { font: 700 22px/1 var(--f-display); letter-spacing: -0.01em; margin: 0; color: var(--accent); }
+h2 { font: 600 17px/1.25 var(--f-body); letter-spacing: -0.01em; margin: 0 0 12px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.top .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sub { color: var(--mute); font-size: 13px; }
+
+/* balance card: the one bold element */
+.hero {
+  position: relative; overflow: hidden;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--hero-rule) 31px 32px),
+    linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.16) 44px 45px, transparent 45px),
+    var(--hero-bg);
+  color: var(--hero-fg); border-radius: 26px; padding: 22px 22px 18px 62px; display: grid; gap: 12px;
+  box-shadow: 0 24px 48px -28px rgba(43,37,181,.9);
+}
+.hero::before { content: '₹'; position: absolute; left: 14px; top: 18px; font: 600 18px var(--f-display); color: var(--hero-mute); }
+.hero.low {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(255,255,255,.09) 31px 32px),
+    linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.18) 44px 45px, transparent 45px),
+    var(--low-bg);
+  color: var(--low-fg); box-shadow: 0 24px 48px -28px rgba(185,46,75,.9);
+}
+.lbl { font: 500 12.5px/1.3 var(--f-body); color: var(--hero-mute); }
+.hero.low .lbl, .hero.low::before { color: var(--low-mute); }
+.bal { font: 600 clamp(32px, 10vw, 46px)/1.05 var(--f-display); letter-spacing: -0.035em; overflow-wrap: anywhere; }
+.tagrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 24px; }
+.tag { font: 500 13px var(--f-body); color: var(--hero-mute); }
+.hero.low .tag { color: var(--low-mute); }
+.ghost { font: 600 13px var(--f-body); color: inherit; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.ghost:hover { background: rgba(255,255,255,.2); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; border-top: 1px dashed rgba(255,255,255,.3); padding-top: 14px; margin-top: 2px; }
+.sv { font: 600 16px var(--f-body); margin-top: 2px; overflow-wrap: anywhere; }
+
+/* confirmation strip and notices */
+.strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--ink); color: var(--bg); border-radius: 16px; padding: 12px 14px; font-weight: 500; }
+.strip button { font: 600 13px var(--f-body); color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 999px; padding: 6px 14px; cursor: pointer; flex: none; }
+.notice { background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; color: var(--ink); }
+
+/* cards and form */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); }
+.fl { display: block; font: 500 13px/1.3 var(--f-body); color: var(--mute); margin: 14px 0 6px; }
+input, select, textarea {
+  display: block; width: 100%; min-width: 0;
+  font: 16px/1.3 var(--f-body); color: var(--ink);
+  background: var(--field); border: 1.5px solid transparent; border-radius: 12px; padding: 12px 13px;
+  transition: border-color .15s, background .15s;
+}
+input:hover, textarea:hover { border-color: var(--line); }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); background: var(--surface); outline: none; }
+input::placeholder, textarea::placeholder { color: var(--mute); opacity: .7; }
+textarea { font-family: var(--f-mono); font-size: 15px; resize: vertical; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { box-shadow: 0 0 0 4px var(--accent-soft); }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 10px; }
+.read { margin: 8px 0 0; min-height: 1.4em; font-size: 13px; color: var(--mute); }
+.read.bad { color: var(--debit); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 14px; background: var(--field); padding: 4px; border-radius: 14px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.seg span { display: block; text-align: center; padding: 9px; border-radius: 10px; font-weight: 600; color: var(--mute); transition: background .15s, color .15s; }
+.seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(25,26,61,.12); }
+.seg label:first-child input:checked + span { color: var(--debit); }
+.seg label:last-child input:checked + span { color: var(--credit); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.formmsg { min-height: 1.3em; margin: 10px 0 0; font-size: 13px; color: var(--debit); }
+.primary { width: 100%; margin-top: 6px; font: 600 16px var(--f-body); color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 14px; padding: 14px; cursor: pointer; transition: transform .1s, filter .15s; }
+.primary:hover { filter: brightness(1.08); }
+.primary:active { transform: scale(.99); }
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.link { font: 600 13px var(--f-body); color: var(--accent); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+
+/* ledger */
+.lh { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.lh h2 { margin: 0; }
+.sync { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--mute); text-align: right; }
+.day { display: flex; justify-content: space-between; gap: 10px; font: 600 13px/1.3 var(--f-body); color: var(--mute); padding: 16px 0 4px; }
+.day:first-child { padding-top: 4px; }
+ul.rows { list-style: none; margin: 0; padding: 0; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 11px 0; border-top: 1px solid var(--line); }
+ul.rows .row:first-child { border-top: 0; }
+.who { font-weight: 600; overflow-wrap: anywhere; }
+.meta { font-size: 12.5px; color: var(--mute); }
+.catbtn { font: 500 12px var(--f-body); color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: 3px 10px; margin: 3px 0; min-height: 24px; cursor: pointer; }
+.catedit { font-size: 16px; padding: 6px 8px; margin: 2px 0; max-width: 220px; }
+.amt { text-align: right; font: 600 15px var(--f-body); }
+.amt.debit { color: var(--debit); }
+.amt.credit { color: var(--credit); }
+.x { justify-self: end; font: 500 12px var(--f-body); color: var(--mute); background: none; border: 0; padding: 4px 0; min-height: 28px; cursor: pointer; }
+.x.armed { color: var(--debit); font-weight: 600; }
+.empty { color: var(--mute); }
+.empty p { margin: 0 0 8px; }
+
+details.card { padding: 0 18px; }
+details.card summary { cursor: pointer; font: 600 15px var(--f-body); padding: 16px 18px; margin: 0 -18px; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+details.card summary::-webkit-details-marker { display: none; }
+details.card summary::after { content: '+'; font: 500 20px/1 var(--f-body); color: var(--accent); transition: transform .2s; }
+details.card[open] summary::after { transform: rotate(45deg); }
+details.card > :last-child { margin-bottom: 18px; }
+details ol { margin: 8px 0 0; padding-left: 20px; color: var(--ink); }
+details li { margin: 6px 0; }
+details p { color: var(--mute); margin: 8px 0 0; }
+.hint { font-size: 13px; color: var(--mute); margin: 10px 0 0; }
+
+.ghost.sm { color: var(--mute); background: var(--surface); border-color: var(--line); padding: 6px 13px; font-size: 13px; }
+.ghost.sm:hover { color: var(--ink); background: var(--surface); }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0 0 6px; background: var(--field); padding: 4px; border-radius: 14px; }
+.tabs button { font: 600 14px var(--f-body); padding: 9px; border: 0; border-radius: 10px; background: transparent; color: var(--mute); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(25,26,61,.12); }
+.lead { color: var(--mute); margin: 14px 0 0; }
+@media (max-width: 460px) { .grid2.stack { grid-template-columns: minmax(0, 1fr); } }
+.kv { display: flex; gap: 8px; align-items: center; }
+.kv code, .tokbox { flex: 1; min-width: 0; }
+code { font: 500 12.5px var(--f-mono); background: var(--field); border-radius: 8px; padding: 8px 10px; display: block; overflow-wrap: anywhere; word-break: break-all; }
+.tokbox { font: 500 13px var(--f-mono); background: var(--accent-soft); border: 1px dashed var(--accent); border-radius: 12px; padding: 10px 12px; overflow-wrap: anywhere; word-break: break-all; user-select: all; }
+.mini { font: 600 13px var(--f-body); color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; flex: none; }
+.warn { color: var(--debit); font-size: 13px; margin: 8px 0 0; }
+.tokrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.tokrow:first-of-type { border-top: 0; }
+.tokrow .meta { grid-column: 1; }
+ol.steps { margin: 8px 0 0; padding-left: 20px; }
+ol.steps li { margin: 8px 0; }
+.who-am-i { color: var(--mute); font-size: 12px; margin: 4px 0 0; text-align: center; overflow-wrap: anywhere; }
+.footnote { color: var(--mute); font-size: 12px; text-align: center; margin: 4px 0 0; }
+.row2 { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row2 input { flex: 1; min-width: 8rem; }
+.topact { display: flex; gap: 8px; align-items: center; }
+.ownerlink { text-decoration: none; display: inline-block; }
+
+/* checkboxes, selects, danger zone */
+.check { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; margin: 14px 0 0; font-size: 14px; color: var(--ink); cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 1px 0 0; padding: 0; accent-color: var(--accent); cursor: pointer; }
+.check a, .footlinks a { color: var(--accent); font-weight: 600; }
+select { appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--mute) 50%), linear-gradient(135deg, var(--mute) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 34px; }
+.opt { font-weight: 400; color: var(--mute); }
+.danger { margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.danger h3 { font: 600 14px var(--f-body); margin: 0; }
+.dangerbtn { margin-top: 10px; font: 600 14px var(--f-body); color: var(--debit); background: transparent; border: 1.5px solid var(--debit); border-radius: 12px; padding: 10px 14px; cursor: pointer; }
+.dangerbtn.armed { color: #fff; background: var(--debit); }
+.footlinks { display: flex; justify-content: center; gap: 16px; font-size: 12px; color: var(--mute); margin: 0; }
+#consentView .card h2 { font-size: 19px; }
+
+/* "check your email" popup */
+dialog.pop { border: 0; padding: 0; background: transparent; max-width: min(24rem, calc(100vw - 32px)); width: 100%; }
+dialog.pop::backdrop { background: rgba(14, 15, 36, .55); backdrop-filter: blur(3px); }
+.popcard { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 24px; padding: 24px 22px 20px; box-shadow: 0 30px 60px -20px rgba(14,15,36,.6); }
+.popicon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 14px; }
+.popcard h2 { font: 700 20px/1.2 var(--f-display); letter-spacing: -0.01em; margin: 0 0 8px; }
+.popcard p { margin: 0; color: var(--mute); }
+.popcard p strong { color: var(--ink); overflow-wrap: anywhere; }
+.popcard ol { margin: 14px 0 4px; padding-left: 20px; }
+.popcard li { margin: 6px 0; }
+.authnote { border-radius: 14px; padding: 12px 14px; margin: 0 0 14px; font-size: 14px; }
+.authnote.ok { background: rgba(18,148,107,.12); color: var(--credit); }
+.authnote.warn { background: rgba(214,59,99,.10); color: var(--debit); }
+
+/* sign-in screen */
+#authView .top { margin-top: 6vh; }
+#authView h1 { font-size: 34px; }
+#authView .card { margin-top: 20px; }
+
+@media (max-width: 440px) { #appView .top .sub { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- signed out -->
+  <section id="authView" hidden>
+    <header class="top"><div class="brand"><h1>Selavu</h1><span class="sub">expenses and balance</span></div></header>
+    <div class="card" style="margin-top:14px">
+      <div class="tabs" role="tablist" aria-label="Account">
+        <button type="button" role="tab" id="tabIn" aria-selected="true">Sign in</button>
+        <button type="button" role="tab" id="tabUp" aria-selected="false">Create account</button>
+      </div>
+      <p class="authnote" id="authNote" role="status" hidden></p>
+      <p class="lead" id="authLead">Sign in to see your expenses and balance.</p>
+      <div id="nameWrap" hidden>
+        <label class="fl" for="aname">Your name</label>
+        <input id="aname" autocomplete="name" maxlength="60">
+      </div>
+      <label class="fl" for="aemail">Email</label>
+      <input id="aemail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false">
+      <label class="fl" for="apass">Password</label>
+      <input id="apass" type="password" autocomplete="current-password" minlength="8">
+      <div id="upChecks" hidden>
+        <label class="check"><input type="checkbox" id="aadult"><span>I am 18 or older</span></label>
+        <label class="check"><input type="checkbox" id="aagree"><span>I agree to the <a href="privacy.html" target="_blank" rel="noopener">privacy note</a></span></label>
+      </div>
+      <p class="formmsg" id="authMsg" role="status"></p>
+      <button type="button" class="primary" id="authGo">Sign in</button>
+      <p class="hint">Your entries belong to your account only. Nobody else can read them.</p>
+    </div>
+    <p class="footlinks" style="margin-top:14px"><a href="privacy.html">Privacy note</a></p>
+  </section>
+
+  <!-- shown once after Create account -->
+  <dialog class="pop" id="mailPop" aria-labelledby="mailPopTitle">
+    <div class="popcard">
+      <div class="popicon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+      </div>
+      <h2 id="mailPopTitle">Confirm your email</h2>
+      <p>We sent a link to <strong id="mailPopTo"></strong>.</p>
+      <ol>
+        <li>Open the email from <strong>Selavu</strong>. Check spam too.</li>
+        <li>Tap the link <strong>once</strong>.</li>
+        <li>You'll come back here to sign in.</li>
+      </ol>
+      <button type="button" class="primary" id="mailPopOk">OK, I'll check my email</button>
+    </div>
+  </dialog>
+
+  <!-- signed in, but has not agreed to the privacy note yet -->
+  <section id="consentView" hidden>
+    <header class="top"><div class="brand"><h1>Selavu</h1></div></header>
+    <div class="card" style="margin-top:20px">
+      <h2>One quick step before you continue</h2>
+      <p class="hint" style="margin-top:0">We've written down what Selavu stores and why. Please read it and confirm.</p>
+      <label class="check"><input type="checkbox" id="cadult"><span>I am 18 or older</span></label>
+      <label class="check"><input type="checkbox" id="cagree"><span>I agree to the <a href="privacy.html" target="_blank" rel="noopener">privacy note</a></span></label>
+      <p class="formmsg" id="consentMsg" role="status"></p>
+      <button type="button" class="primary" id="consentGo">Continue</button>
+      <button type="button" class="link" id="consentOut" style="display:block;margin:12px auto 0">Sign out</button>
+    </div>
+  </section>
+
+  <!-- signed in -->
+  <div id="appView" hidden style="display:grid;gap:14px">
+    <header class="top">
+      <div class="brand"><h1>Selavu</h1><span class="sub">expenses and balance</span></div>
+      <div class="topact">
+        <a class="ghost sm ownerlink" id="ownerLink" href="admin.html" hidden>Customers</a>
+        <button type="button" class="ghost sm" id="signOut">Sign out</button>
+      </div>
+    </header>
+
+    <section id="hero" class="hero" aria-live="polite">
+      <div class="lbl">Balance now</div>
+      <div class="bal" id="balAmt">…</div>
+      <div class="tagrow">
+        <span class="tag" id="balTag">Loading your ledger</span>
+        <button type="button" class="ghost" id="setBalBtn" hidden>Set balance</button>
+      </div>
+      <div class="stats">
+        <div><div class="lbl">Spent today</div><div class="sv" id="sToday">₹0.00</div></div>
+        <div><div class="lbl" id="lblMonth">Spent this month</div><div class="sv" id="sMonth">₹0.00</div></div>
+        <div><div class="lbl" id="lblIn">Received</div><div class="sv" id="sIn">₹0.00</div></div>
+      </div>
+    </section>
+
+    <div id="strip" class="strip" hidden><span id="stripText"></span><button type="button" id="undo">Undo</button></div>
+    <div id="syncStrip" class="strip" hidden><span id="syncText"></span></div>
+    <div id="notice" class="notice" hidden></div>
+
+    <section class="card" id="addCard">
+      <h2>Add an entry</h2>
+      <label class="fl" for="sms" style="margin-top:0">Paste the bank SMS</label>
+      <textarea id="sms" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Rs.250.00 debited from A/c XX1234 to VPA swiggy@icici. Avl Bal Rs 12,480.50"></textarea>
+      <p class="read" id="readOut" aria-live="polite"></p>
+
+      <div class="seg" role="radiogroup" aria-label="Entry type">
+        <label><input type="radio" name="kind" value="debit" checked><span>Spent</span></label>
+        <label><input type="radio" name="kind" value="credit"><span>Received</span></label>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="fl" for="amt">Amount (₹)</label>
+          <input id="amt" inputmode="decimal" autocomplete="off" placeholder="0.00">
+        </div>
+        <div>
+          <label class="fl" for="cat">Category</label>
+          <input id="cat" list="catList" maxlength="30" autocomplete="off" placeholder="Type or pick">
+          <datalist id="catList"></datalist>
+        </div>
+      </div>
+
+      <label class="fl" for="who">Paid to / received from</label>
+      <input id="who" autocomplete="off" placeholder="Swiggy">
+
+      <div class="grid2 stack">
+        <div>
+          <label class="fl" for="fbal">Bank balance after (optional)</label>
+          <input id="fbal" inputmode="decimal" autocomplete="off" placeholder="from the SMS">
+        </div>
+        <div>
+          <label class="fl" for="when">When</label>
+          <input id="when" type="datetime-local">
+        </div>
+      </div>
+
+      <p class="formmsg" id="formMsg" role="status"></p>
+      <button type="button" class="primary" id="add">Add entry</button>
+    </section>
+
+    <section class="card" id="ledgerCard">
+      <div class="lh">
+        <h2>Ledger</h2>
+        <div class="sync"><span id="syncStat"></span><button type="button" class="link" id="refreshBtn">Refresh</button></div>
+      </div>
+      <div id="ledger"></div>
+    </section>
+
+    <details class="card" id="profile">
+      <summary>Your profile</summary>
+      <label class="fl" for="pname">Name</label>
+      <input id="pname" autocomplete="name" maxlength="60" placeholder="How should we call you?">
+      <div class="grid2 stack">
+        <div>
+          <label class="fl" for="pphone">Phone <span class="opt">(optional)</span></label>
+          <input id="pphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="18" placeholder="+91 98765 43210">
+        </div>
+        <div>
+          <label class="fl" for="pcity">City <span class="opt">(optional)</span></label>
+          <input id="pcity" autocomplete="address-level2" maxlength="60" placeholder="Chennai">
+        </div>
+      </div>
+      <div class="grid2 stack">
+        <div>
+          <label class="fl" for="ptype">I am a</label>
+          <select id="ptype">
+            <option value="">Choose</option>
+            <option value="student">Student</option>
+            <option value="working">Working professional</option>
+            <option value="self_employed">Self-employed</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="fl" for="pbank">Main bank</label>
+          <select id="pbank"><option value="">Choose</option></select>
+        </div>
+      </div>
+      <label class="fl" for="pheard">How did you hear about Selavu?</label>
+      <select id="pheard">
+        <option value="">Choose</option>
+        <option>Friend or family</option>
+        <option>College</option>
+        <option>Instagram</option>
+        <option>WhatsApp</option>
+        <option>YouTube</option>
+        <option>LinkedIn</option>
+        <option>Google search</option>
+        <option>Other</option>
+      </select>
+      <p class="formmsg" id="profMsg" role="status" style="color:var(--mute)"></p>
+      <button type="button" class="primary" id="saveProf">Save profile</button>
+      <p class="hint">Only you and the Selavu owner can see these details. Your expenses and balance stay private to you.</p>
+
+      <div class="danger">
+        <h3>Delete my account</h3>
+        <p class="hint" style="margin-top:4px">This permanently deletes your account, every entry, your phone tokens and your profile. It can't be undone.</p>
+        <button type="button" class="dangerbtn" id="delAcc">Delete my account</button>
+        <p class="formmsg" id="delMsg" role="status"></p>
+      </div>
+    </details>
+
+    <details class="card" id="settings">
+      <summary>Balance and low-balance alert</summary>
+      <label class="fl" for="sbal">Bank balance right now (₹)</label>
+      <input id="sbal" inputmode="decimal" autocomplete="off" placeholder="Type it once, or whenever it drifts">
+      <label class="fl" for="slow">Warn me when balance is at or below (₹)</label>
+      <input id="slow" inputmode="decimal" autocomplete="off">
+      <p class="formmsg" id="setMsg" role="status" style="color:var(--mute)"></p>
+      <button type="button" class="primary" id="saveSet">Save</button>
+      <p class="hint">The notification on your phone uses this balance too. When an SMS carries "Avl Bal", that number replaces the running total, so small mistakes correct themselves.</p>
+    </details>
+
+    <details class="card" id="phone">
+      <summary>Phone setup: add SMS entries automatically</summary>
+      <p class="hint" style="margin-top:8px">Each phone gets its own token. The token is a password for adding entries to your account: keep it private.</p>
+
+      <label class="fl">Function URL</label>
+      <div class="kv"><code id="fnUrl"></code><button type="button" class="mini" id="copyUrl">Copy</button></div>
+
+      <label class="fl" for="tlabel">New token</label>
+      <div class="row2"><input id="tlabel" value="iPhone" maxlength="40" autocomplete="off"><button type="button" class="mini" id="mkTok">Create token</button></div>
+      <div id="newTok" hidden>
+        <label class="fl">Your token (shown only once)</label>
+        <div class="kv"><div class="tokbox" id="tokText"></div><button type="button" class="mini" id="copyTok">Copy</button></div>
+        <p class="warn">Copy it now and paste it into your Shortcut. After you leave this page it cannot be shown again.</p>
+      </div>
+      <p class="formmsg" id="tokMsg" role="status"></p>
+      <div id="tokList"></div>
+
+      <h2 style="margin-top:16px">iPhone (Shortcuts)</h2>
+      <ol class="steps">
+        <li>Shortcuts, then Automation, then New Automation, then Message.</li>
+        <li>Message Contains <strong>debited</strong>, then Run Immediately. Make a second one for <strong>credited</strong> if you want money received too.</li>
+        <li>Action 1, <strong>Get Contents of URL</strong>: paste the Function URL, tap Show More, Method <strong>POST</strong>, Header <code style="display:inline;padding:2px 6px">x-selavu-token</code> with your token, Request Body <strong>JSON</strong> with a Text field <code style="display:inline;padding:2px 6px">sms</code> set to Shortcut Input.</li>
+        <li>Action 2, <strong>Get Dictionary Value</strong> for the key <code style="display:inline;padding:2px 6px">message</code> from Contents of URL.</li>
+        <li>Action 3, <strong>Show Notification</strong> with that value.</li>
+      </ol>
+      <h2 style="margin-top:16px">Android</h2>
+      <p class="hint">Use an automation app such as MacroDroid or Tasker: when an SMS containing "debited" or "credited" arrives, send an HTTP POST to the Function URL with the header <code style="display:inline;padding:2px 6px">x-selavu-token</code> and a JSON body <code style="display:inline;padding:2px 6px">{"sms": "the message text"}</code>. Menu names differ between apps.</p>
+      <h2 style="margin-top:16px">Install this app</h2>
+      <p class="hint">iPhone: open this page in Safari, tap Share, then Add to Home Screen. Android: Chrome menu, then Install app.</p>
+    </details>
+
+    <p class="who-am-i" id="whoAmI"></p>
+    <p class="footlinks"><a href="privacy.html">Privacy note</a></p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// PARSER-START
+const CUR = '(?:\\b(?:rs|inr)\\.?|₹)\\s*';
+const AMT = '([0-9][0-9,]*(?:\\.[0-9]{1,2})?)';
+const NAME = "([A-Za-z0-9][A-Za-z0-9 &.'@_\\-]{1,38}?)";
+const END = '(?=\\s+(?:on|via|ref\\w*|upi|using|from|dated|at|avl|bal|not|if|call|vpa|for|txn)\\b|\\s*[.,(;]|\\s*$)';
+const NOT_WHO = /^(your|a\/c|ac|acct|account|xx|bank|upi|vpa|you|me|self|the)\b/i;
+
+const CATS = ['Food', 'Groceries', 'Travel', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Education', 'Transfer', 'Income', 'Other'];
+const KEYS = [
+  ['Food', /swiggy|zomato|restaurant|cafe|coffee|\bkfc\b|domino|pizza|mcdonald|burger|biryani|bakery|hotel|canteen|juice|\btea\b|dhaba|ice ?cream|starbucks|food/i],
+  ['Groceries', /bigbasket|blinkit|zepto|instamart|dmart|supermarket|grocery|\bmart\b|provision|vegetable|fruit|\bmilk\b|reliance fresh|more retail/i],
+  ['Travel', /\buber\b|\bola\b|rapido|irctc|redbus|metro|railway|fuel|petrol|diesel|bpcl|hpcl|iocl|indian oil|\bshell\b|fastag|\btoll\b|makemytrip|goibibo|indigo|air ?india|\bcab\b|\bauto\b/i],
+  ['Shopping', /amazon|flipkart|myntra|ajio|meesho|nykaa|decathlon|croma|lifestyle|westside|pantaloons|store|\bmall\b|textiles|fashion/i],
+  ['Bills', /\bjio\b|airtel|vodafone|bsnl|recharge|electricity|tneb|tangedco|\bwater\b|\bgas\b|broadband|fibernet|insurance|\blic\b|\bemi\b|\bloan\b|\brent\b|\bdth\b|tata play|postpaid/i],
+  ['Entertainment', /netflix|spotify|hotstar|prime video|youtube|bookmyshow|\bpvr\b|inox|gaming|steam|sony ?liv|zee5/i],
+  ['Health', /pharma|apollo|medplus|medical|hospital|clinic|diagnostic|\blab\b|dental|netmeds|\b1mg\b|pharmeasy/i],
+  ['Education', /udemy|coursera|college|school|university|\bsrm\b|tuition|\bexam\b|\bfees?\b|\bbooks?\b|stationery|xerox|byju|unacademy|nptel/i],
+];
+
+function toNum(s) { return parseFloat(String(s).replace(/,/g, '')); }
+function titleCase(s) { return s.toLowerCase().replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); }); }
+function cleanWho(s) {
+  if (!s) return '';
+  s = s.replace(/\s+/g, ' ').trim().replace(/[.\-,:;\s]+$/, '');
+  if (s.indexOf('@') >= 0) s = s.split('@')[0].replace(/[._\-]+/g, ' ').trim();
+  if (!s || NOT_WHO.test(s)) return '';
+  if (s === s.toUpperCase() || s === s.toLowerCase()) s = titleCase(s);
+  return s.slice(0, 40);
+}
+function pickWho(t, kind) {
+  const dir = kind === 'credit' ? '(?:from|by)' : '(?:to|at)';
+  const tries = [
+    new RegExp('\\b' + dir + '\\s+vpa\\s+([\\w.\\-]+@\\w+)', 'gi'),
+    /UPI\/(?:P2[A-Z]\/)?\d{6,}\/([^\/]{2,40}?)(?=\s*(?:\/|\.\s|\.$|\s-\s|\sAvl|\sBal|$))/gi
+  ];
+  if (kind === 'credit') {
+    tries.push(new RegExp('\\b(?:from|by)\\s+' + NAME + END, 'gi'));
+  } else {
+    tries.push(new RegExp('\\bto\\s+' + NAME + END, 'gi'), new RegExp('\\bat\\s+' + NAME + END, 'gi'));
+  }
+  for (const re of tries) {
+    for (const m of t.matchAll(re)) {
+      const w = cleanWho(m[1]);
+      if (w) return w;
+    }
+  }
+  return '';
+}
+function guessCat(who, kind, text) {
+  if (kind === 'credit') return 'Income';
+  for (const k of KEYS) if (k[1].test(who)) return k[0];
+  if (!who && text) { for (const k of KEYS) if (k[1].test(text)) return k[0]; }
+  if (/^\d{10}$/.test(who) || /^[A-Z][a-z]+( [A-Z][a-z]+)*$/.test(who)) return 'Transfer';
+  return 'Other';
+}
+// Bank name from the SMS text. Same list as the phone function (ingest-sms).
+const BANKS = [
+  ['SBI', /\bsbi\b|state bank/i], ['HDFC', /hdfc/i], ['ICICI', /icici/i], ['Axis', /\baxis\b/i], ['Kotak', /kotak/i],
+  ['IOB', /\biob\b|indian overseas/i], ['Indian Bank', /indian bank/i], ['Canara', /canara/i], ['PNB', /\bpnb\b|punjab national/i],
+  ['Bank of Baroda', /\bbob\b|baroda/i], ['Union Bank', /union bank/i], ['Bank of India', /bank of india|\bboi\b/i],
+  ['IDFC First', /idfc/i], ['Yes Bank', /yes ?bank/i], ['IndusInd', /indusind/i], ['Federal', /federal/i],
+  ['City Union', /city union|\bcub\b/i], ['KVB', /karur vysya|\bkvb\b/i], ['TMB', /tamilnad mercantile|\btmb\b/i],
+  ['AU', /\bau (?:small|bank)/i], ['Paytm', /paytm/i], ['Airtel Payments', /airtel payments/i]
+];
+function detectBank(text) {
+  for (let i = 0; i < BANKS.length; i++) if (BANKS[i][1].test(text)) return BANKS[i][0];
+  return 'Unknown';
+}
+
+function parseSms(raw) {
+  const t = String(raw || '').replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  const balRe = new RegExp('(?:avl\\.?\\s*bal(?:ance)?|available\\s*bal(?:ance)?|clr\\s*bal|bal(?:ance)?)\\s*(?:is|:|-)?\\s*(?:' + CUR + ')?' + AMT, 'i');
+  const bm = t.match(balRe);
+  const bal = bm ? toNum(bm[1]) : null;
+  const body = bm ? t.replace(bm[0], ' ') : t;
+
+  let am = body.match(new RegExp(CUR + AMT, 'i'));
+  if (!am) am = body.match(new RegExp('(?:debited|credited|paid|sent|received|withdrawn|spent)\\s*(?:by|for|with|of)?\\s*' + AMT, 'i'));
+  if (!am) return null;
+  const amt = toNum(am[1]);
+  if (!(amt > 0)) return null;
+
+  const low = body.toLowerCase();
+  const di = low.search(/\b(debited|debit|spent|sent|paid|withdrawn|purchase)\b/);
+  const ci = low.search(/\b(credited|received|deposited|refunded|refund)\b/);
+  let kind = null;
+  if (di >= 0 && (ci < 0 || di < ci)) kind = 'debit';
+  else if (ci >= 0) kind = 'credit';
+
+  const who = pickWho(body, kind);
+  return { amt: amt, kind: kind, who: who, bal: bal, cat: guessCat(who, kind || 'debit', body) };
+}
+// PARSER-END
+
+(function () {
+  'use strict';
+
+  // The anon key is public by design. What protects the data is row level security in the database plus your login.
+  const SB_URL = 'https://enyuzhzxfxbsfixldeuw.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVueXV6aHp4Znhic2ZpeGxkZXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2ODYwNDEsImV4cCI6MjEwOTI2MjA0MX0.lrt-CmJCWqxkvtGHdAWHPSQdyVJmExyd7pi21ySYfLA';
+  const FN_URL = SB_URL + '/functions/v1/ingest-sms';
+
+  const $ = function (id) { return document.getElementById(id); };
+  const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const money = function (n) { return '₹' + inr.format(n); };
+  const state = { user: null, txs: [], settings: { balance: null, balanceTs: null, low: 500 }, tokens: [], loaded: false, last: null, seen: null, profile: null };
+  let lastTimer = null, syncTimer = null, loading = false, sb = null;
+
+  function el(tag, attrs, kids) {
+    const n = document.createElement(tag);
+    if (attrs) for (const k in attrs) { if (k === 'class') n.className = attrs[k]; else n.setAttribute(k, attrs[k]); }
+    if (kids != null) (Array.isArray(kids) ? kids : [kids]).forEach(function (c) { n.append(c); });
+    return n;
+  }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toLocalInput(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function dayStart(ts) { const d = new Date(ts); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+  function fmtTime(ts) { return new Date(ts).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }); }
+  function fmtWhen(ts) {
+    if (dayStart(ts) === dayStart(Date.now())) return 'today ' + fmtTime(ts);
+    return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ', ' + fmtTime(ts);
+  }
+  function dayLabel(key) {
+    const today = dayStart(Date.now());
+    if (key === today) return 'Today';
+    if (key === dayStart(today - 3600000)) return 'Yesterday';
+    return new Date(key).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  async function copyText(text, btn) {
+    const old = btn.textContent;
+    try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+    catch (e) { btn.textContent = 'Select and copy'; }
+    setTimeout(function () { btn.textContent = old; }, 1800);
+  }
+
+  /* ---------- categories: the built-in list plus anything you have typed before ---------- */
+  function knownCats() {
+    const seen = new Set(), out = [];
+    CATS.concat(state.txs.map(function (t) { return t.cat; })).forEach(function (c) {
+      const v = String(c || '').trim();
+      if (v && !seen.has(v.toLowerCase())) { seen.add(v.toLowerCase()); out.push(v); }
+    });
+    return out;
+  }
+  function normCat(s) {
+    let v = String(s || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+    if (!v) return 'Other';
+    const hit = knownCats().find(function (c) { return c.toLowerCase() === v.toLowerCase(); });
+    if (hit) return hit;
+    return v === v.toLowerCase() ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+  }
+  function refreshCatList() {
+    const dl = $('catList');
+    if (!dl) return;
+    dl.textContent = '';
+    knownCats().forEach(function (c) { dl.append(el('option', { value: c })); });
+  }
+
+  /* ---------- balance (same rule as the server: latest anchor, then everything after it) ---------- */
+  function signed(t) { return t.kind === 'credit' ? t.amt : -t.amt; }
+  function computeBalance() {
+    const items = [];
+    const s = state.settings;
+    if (typeof s.balance === 'number' && typeof s.balanceTs === 'number') items.push({ ts: s.balanceTs, order: 0, bal: s.balance, tx: null });
+    state.txs.slice().sort(function (a, b) { return a.ts - b.ts || (a.id < b.id ? -1 : 1); }).forEach(function (t) {
+      items.push({ ts: t.ts, order: 1, bal: typeof t.bal === 'number' ? t.bal : null, tx: t });
+    });
+    items.sort(function (a, b) { return a.ts - b.ts || a.order - b.order; });
+    let ai = -1;
+    for (let i = items.length - 1; i >= 0; i--) { if (items[i].bal !== null) { ai = i; break; } }
+    if (ai < 0) return null;
+    let bal = items[ai].bal;
+    for (let i = ai + 1; i < items.length; i++) { if (items[i].tx) bal += signed(items[i].tx); }
+    return { bal: Math.round(bal * 100) / 100, asOf: items[ai].ts, fromSms: !!items[ai].tx };
+  }
+  function stats() {
+    const d0 = dayStart(Date.now());
+    const n = new Date();
+    const m0 = new Date(n.getFullYear(), n.getMonth(), 1).getTime();
+    let today = 0, month = 0, inMonth = 0;
+    state.txs.forEach(function (t) {
+      if (t.kind === 'debit') { if (t.ts >= d0) today += t.amt; if (t.ts >= m0) month += t.amt; }
+      else if (t.ts >= m0) inMonth += t.amt;
+    });
+    return { today: today, month: month, inMonth: inMonth };
+  }
+
+  /* ---------- render ---------- */
+  function renderHero() {
+    const b = computeBalance();
+    const s = stats();
+    const mon = new Date().toLocaleString('en-IN', { month: 'short' });
+    $('lblMonth').textContent = 'Spent in ' + mon;
+    $('lblIn').textContent = 'Received in ' + mon;
+    $('sToday').textContent = money(s.today);
+    $('sMonth').textContent = money(s.month);
+    $('sIn').textContent = money(s.inMonth);
+    const isLow = !!b && b.bal <= state.settings.low;
+    $('hero').classList.toggle('low', isLow);
+    if (!state.loaded) {
+      $('balAmt').textContent = '…';
+      $('balTag').textContent = 'Loading your ledger';
+      $('setBalBtn').hidden = true;
+      return;
+    }
+    if (!b) {
+      $('balAmt').textContent = '—';
+      $('balTag').textContent = 'Set your bank balance once. After that every entry updates it.';
+      $('setBalBtn').hidden = false;
+      return;
+    }
+    $('setBalBtn').hidden = true;
+    $('balAmt').textContent = money(b.bal);
+    $('balTag').textContent = (isLow ? 'Low balance · ' : '') + (b.fromSms ? 'from bank SMS, ' : 'set by you, ') + fmtWhen(b.asOf);
+  }
+
+  function renderStrip() {
+    const strip = $('strip');
+    const t = state.last ? state.txs.find(function (x) { return x.id === state.last.id; }) : null;
+    if (!t) { strip.hidden = true; return; }
+    const b = computeBalance();
+    $('stripText').textContent = (t.kind === 'credit' ? 'Received ' : 'Spent ') + money(t.amt) + (t.who ? ' · ' + t.who : '') +
+      '. Balance now ' + (b ? money(b.bal) : 'not set') + '.';
+    strip.hidden = false;
+  }
+
+  // the category in each row is a button: tap it, type a new category (or pick one), press Enter
+  function makeMeta(t) {
+    const meta = el('div', { class: 'meta' });
+    const rest = [fmtTime(t.ts), t.src === 'sms' ? 'from SMS' : 'by hand'].join(' · ');
+    function show() {
+      meta.textContent = '';
+      const b = el('button', { type: 'button', class: 'catbtn', 'aria-label': 'Change category, now ' + t.cat }, t.cat || 'Other');
+      b.addEventListener('click', edit);
+      meta.append(b, ' · ' + rest);
+    }
+    function edit() {
+      meta.textContent = '';
+      const inp = el('input', { class: 'catedit', list: 'catList', maxlength: '30', autocomplete: 'off', 'aria-label': 'Category' });
+      inp.placeholder = t.cat || 'Other';
+      let done = false;
+      async function save() {
+        if (done) return;
+        done = true;
+        const v = inp.value.trim() ? normCat(inp.value) : t.cat;
+        if (v === t.cat) { show(); return; }
+        const r = await sb.from('expenses').update({ cat: v }).eq('id', t.id);
+        if (r.error) { notice('Could not change that category.'); show(); return; }
+        t.cat = v;
+        renderAll();
+      }
+      inp.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { done = true; show(); }
+      });
+      inp.addEventListener('change', save);
+      inp.addEventListener('blur', save);
+      meta.append(inp);
+      inp.focus();
+    }
+    show();
+    return meta;
+  }
+
+  function makeRow(t) {
+    const li = el('li', { class: 'row' });
+    li.append(
+      el('div', { class: 'who' }, t.who || 'Unknown'),
+      el('div', { class: 'amt ' + t.kind }, (t.kind === 'credit' ? '+' : '−') + money(t.amt)),
+      makeMeta(t)
+    );
+    li.append(armedButton('Delete', 'Tap again to delete', 'Delete this entry', async function () {
+      const r = await sb.from('expenses').delete().eq('id', t.id);
+      if (r.error) { notice('Could not delete that entry.'); return false; }
+      state.txs = state.txs.filter(function (x) { return x.id !== t.id; });
+      renderAll();
+      return true;
+    }));
+    return li;
+  }
+  // two-tap destructive button
+  function armedButton(label, armedLabel, aria, action) {
+    const b = el('button', { type: 'button', class: 'x', 'aria-label': aria }, label);
+    let armed = null;
+    b.addEventListener('click', async function () {
+      if (!armed) {
+        b.textContent = armedLabel;
+        b.classList.add('armed');
+        armed = setTimeout(function () { armed = null; b.textContent = label; b.classList.remove('armed'); }, 4000);
+        return;
+      }
+      clearTimeout(armed);
+      b.disabled = true;
+      const ok = await action();
+      if (ok === false) { b.disabled = false; b.textContent = label; b.classList.remove('armed'); armed = null; }
+    });
+    return b;
+  }
+
+  function renderLedger() {
+    const root = $('ledger');
+    root.textContent = '';
+    if (!state.loaded) { root.append(el('div', { class: 'empty' }, el('p', null, 'Loading entries…'))); return; }
+    const txs = state.txs.slice().sort(function (a, b) { return b.ts - a.ts; }).slice(0, 200);
+    if (!txs.length) {
+      const box = el('div', { class: 'empty' });
+      box.append(el('p', null, 'No entries yet. Paste a bank SMS above, or fill the fields by hand. To add them automatically, open "Phone setup" below.'));
+      root.append(box);
+      return;
+    }
+    const groups = new Map();
+    txs.forEach(function (t) {
+      const k = dayStart(t.ts);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(t);
+    });
+    groups.forEach(function (arr, key) {
+      const spent = arr.reduce(function (s, t) { return t.kind === 'debit' ? s + t.amt : s; }, 0);
+      root.append(el('div', { class: 'day' }, [el('span', null, dayLabel(key)), el('span', null, spent ? 'Spent ' + money(spent) : '')]));
+      const ul = el('ul', { class: 'rows' });
+      arr.forEach(function (t) { ul.append(makeRow(t)); });
+      root.append(ul);
+    });
+  }
+
+  function renderTokens() {
+    const root = $('tokList');
+    root.textContent = '';
+    if (!state.tokens.length) { root.append(el('p', { class: 'hint' }, 'No tokens yet. Create one for your phone.')); return; }
+    state.tokens.forEach(function (t) {
+      const row = el('div', { class: 'tokrow' });
+      row.append(
+        el('div', { class: 'who' }, t.label || 'Phone'),
+        armedButton('Delete', 'Tap again to delete', 'Delete this token', async function () {
+          const r = await sb.from('ingest_tokens').delete().eq('id', t.id);
+          if (r.error) { $('tokMsg').textContent = 'Could not delete that token.'; return false; }
+          state.tokens = state.tokens.filter(function (x) { return x.id !== t.id; });
+          renderTokens();
+          return true;
+        }),
+        el('div', { class: 'meta' }, 'Created ' + new Date(t.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) +
+          ' · ' + (t.last_used_at ? 'last used ' + fmtWhen(new Date(t.last_used_at).getTime()) : 'never used'))
+      );
+      root.append(row);
+    });
+  }
+
+  function renderAll() { refreshCatList(); renderHero(); renderStrip(); renderLedger(); renderTokens(); }
+
+  function notice(msg) {
+    const n = $('notice');
+    if (!msg) { n.hidden = true; return; }
+    n.textContent = msg;
+    n.hidden = false;
+  }
+
+  /* ---------- data ---------- */
+  function friendlyNet(e) {
+    return 'Could not reach the server. Check your internet. If this keeps happening, the Supabase project may be paused: restore it in the Supabase dashboard.';
+  }
+  async function loadAll(quiet) {
+    if (loading || !state.user) return;
+    loading = true;
+    if (!quiet) $('syncStat').textContent = 'Loading…';
+    try {
+      const res = await Promise.all([
+        sb.from('expenses').select('id,amt,kind,who,cat,ts,bal,src').order('ts', { ascending: false }).limit(500),
+        sb.from('settings').select('balance,balance_ts,low').maybeSingle(),
+        sb.from('ingest_tokens').select('id,label,created_at,last_used_at').order('created_at', { ascending: false })
+      ]);
+      const failed = res.find(function (r) { return r.error; });
+      if (failed) { notice(failed.error.message && /JWT|token|expired/i.test(failed.error.message) ? 'Your session expired. Sign in again.' : 'Could not load your ledger. Tap Refresh to try again.'); $('syncStat').textContent = ''; return; }
+      const rows = (res[0].data || []).map(function (x) {
+        return { id: x.id, amt: Number(x.amt), kind: x.kind, who: x.who, cat: x.cat, ts: new Date(x.ts).getTime(), bal: x.bal === null ? null : Number(x.bal), src: x.src };
+      });
+      const s = res[1].data;
+      state.settings = s
+        ? { balance: s.balance === null ? null : Number(s.balance), balanceTs: s.balance_ts ? new Date(s.balance_ts).getTime() : null, low: Number(s.low) }
+        : { balance: null, balanceTs: null, low: 500 };
+      state.tokens = res[2].data || [];
+
+      // entries that arrived by SMS while the page was open
+      let fresh = 0;
+      if (state.seen) rows.forEach(function (r) { if (!state.seen.has(r.id) && r.src === 'sms') fresh++; });
+      state.seen = new Set(rows.map(function (r) { return r.id; }));
+      state.txs = rows;
+      state.loaded = true;
+      notice('');
+      if (!$('slow').value) $('slow').value = String(state.settings.low);
+      if (!computeBalance() && !$('settings').dataset.opened) { $('settings').open = true; $('settings').dataset.opened = '1'; }
+      renderAll();
+      $('syncStat').textContent = 'Updated ' + fmtTime(Date.now());
+      if (fresh) {
+        const b = computeBalance();
+        $('syncText').textContent = fresh + (fresh === 1 ? ' new SMS entry' : ' new SMS entries') + '. Balance now ' + (b ? money(b.bal) : 'not set') + '.';
+        $('syncStrip').hidden = false;
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(function () { $('syncStrip').hidden = true; }, 20000);
+      }
+    } catch (e) {
+      notice(friendlyNet(e));
+      $('syncStat').textContent = '';
+    } finally { loading = false; }
+  }
+
+  /* ---------- add entry form ---------- */
+  const f = { sms: $('sms'), amt: $('amt'), who: $('who'), cat: $('cat'), bal: $('fbal'), when: $('when'), add: $('add'), read: $('readOut'), msg: $('formMsg') };
+  refreshCatList();
+  f.cat.value = 'Other';
+  // a typed box with suggestions: clear it on tap so every category shows, put the old one back if you leave it empty
+  let catBefore = 'Other';
+  f.cat.addEventListener('focus', function () { catBefore = f.cat.value || 'Other'; f.cat.value = ''; });
+  f.cat.addEventListener('blur', function () { f.cat.value = f.cat.value.trim() ? normCat(f.cat.value) : catBefore; });
+  function setKind(k) { const r = document.querySelector('input[name=kind][value=' + k + ']'); if (r) r.checked = true; }
+  function currentKind() { return document.querySelector('input[name=kind]:checked').value; }
+  let whenTouched = false;
+  function resetWhen() { f.when.value = toLocalInput(new Date()); whenTouched = false; }
+  f.when.addEventListener('input', function () { whenTouched = true; });
+  resetWhen();
+
+  function fillFromSms() {
+    const text = f.sms.value;
+    f.msg.textContent = '';
+    if (!text.trim()) { f.read.textContent = ''; f.read.className = 'read'; return; }
+    const r = parseSms(text);
+    if (!r) {
+      f.read.textContent = 'No amount found in that message. Fill the fields below by hand.';
+      f.read.className = 'read bad';
+      logUnread(text);
+      return;
+    }
+    const kind = r.kind || 'debit';
+    setKind(kind);
+    f.amt.value = String(r.amt);
+    f.who.value = r.who;
+    f.cat.value = r.cat;
+    f.bal.value = r.bal != null ? String(r.bal) : '';
+    f.read.className = 'read';
+    f.read.textContent = 'Read: ' + (kind === 'credit' ? 'received ' : 'spent ') + money(r.amt) +
+      (r.who ? ' · ' + r.who : '') + (r.bal != null ? ' · bank balance ' + money(r.bal) : '') +
+      (r.kind ? '' : ' · check Spent or Received');
+  }
+  f.sms.addEventListener('input', fillFromSms);
+  // An unreadable pasted SMS is logged once, after typing settles. Only the bank name is sent, never the text.
+  const unreadSeen = new Set();
+  let unreadTimer = null;
+  function logUnread(text) {
+    clearTimeout(unreadTimer);
+    const t = text.replace(/\s+/g, ' ').trim();
+    if (t.length < 25 || !/(debit|credit|paid|sent|received|withdrawn|spent|a\/c|acct|upi)/i.test(t)) return;
+    unreadTimer = setTimeout(function () {
+      if (!state.user || unreadSeen.has(t) || parseSms(f.sms.value)) return;
+      unreadSeen.add(t);
+      sb.from('parse_failures').insert({ user_id: state.user.id, bank: detectBank(t), source: 'manual', reason: 'no_amount' }).then(function () {}, function () {});
+    }, 3000);
+  }
+  document.querySelectorAll('input[name=kind]').forEach(function (r) {
+    r.addEventListener('change', function () { if (currentKind() === 'credit' && f.cat.value !== 'Income') f.cat.value = 'Income'; });
+  });
+  function resetForm() {
+    f.sms.value = ''; f.amt.value = ''; f.who.value = ''; f.bal.value = '';
+    f.cat.value = 'Other'; setKind('debit'); resetWhen();
+    f.read.textContent = ''; f.read.className = 'read';
+  }
+  function toNum(s) { return parseFloat(String(s).replace(/,/g, '')); }
+
+  async function addTx() {
+    if (!state.user) return;
+    const amt = toNum(f.amt.value);
+    if (!(amt > 0) || !isFinite(amt)) { f.msg.textContent = 'Enter an amount greater than zero.'; return; }
+    const balText = f.bal.value.trim();
+    const bal = balText === '' ? null : toNum(balText);
+    if (bal !== null && !isFinite(bal)) { f.msg.textContent = 'Bank balance should be a number.'; return; }
+    // untouched "When" means right now (the field only holds the minute, which could fall before a balance you just set)
+    let ts = whenTouched && f.when.value ? new Date(f.when.value).getTime() : Date.now();
+    if (isNaN(ts)) ts = Date.now();
+    const doc = {
+      amt: Math.round(amt * 100) / 100,
+      kind: currentKind(),
+      who: f.who.value.trim().slice(0, 40) || 'Unknown',
+      cat: normCat(f.cat.value),
+      ts: new Date(ts).toISOString(),
+      src: f.sms.value.trim() ? 'sms' : 'manual'
+    };
+    if (f.sms.value.trim()) doc.bank = detectBank(f.sms.value);
+    if (bal !== null) doc.bal = bal;
+    f.msg.textContent = '';
+    f.add.disabled = true;
+    try {
+      const r = await sb.from('expenses').insert(doc).select('id').single();
+      if (r.error) throw r.error;
+      state.last = { id: r.data.id };
+      clearTimeout(lastTimer);
+      lastTimer = setTimeout(function () { state.last = null; renderStrip(); }, 20000);
+      // show the new entry and balance right away; the server copy refreshes quietly in the background
+      state.txs = [{ id: r.data.id, amt: doc.amt, kind: doc.kind, who: doc.who, cat: doc.cat, ts: ts, bal: bal, src: doc.src }].concat(state.txs);
+      resetForm();
+      renderAll();
+      loading = false;
+      loadAll(true);
+    } catch (e) {
+      f.msg.textContent = 'Could not save that entry. Check your internet and try again.';
+    } finally { f.add.disabled = false; }
+  }
+  f.add.addEventListener('click', addTx);
+
+  $('undo').addEventListener('click', async function () {
+    if (!state.last) return;
+    const id = state.last.id;
+    state.last = null;
+    renderStrip();
+    const r = await sb.from('expenses').delete().eq('id', id);
+    if (r.error) { notice('Could not undo that entry. Delete it from the ledger.'); return; }
+    state.txs = state.txs.filter(function (x) { return x.id !== id; });
+    renderAll();
+  });
+
+  /* ---------- settings ---------- */
+  $('setBalBtn').addEventListener('click', function () {
+    const d = $('settings');
+    d.open = true;
+    d.scrollIntoView({ block: 'center' });
+    $('sbal').focus();
+  });
+  $('saveSet').addEventListener('click', async function () {
+    const msg = $('setMsg');
+    const s = state.settings;
+    const row = {
+      user_id: state.user.id,
+      balance: s.balance,
+      balance_ts: s.balanceTs ? new Date(s.balanceTs).toISOString() : null,
+      low: s.low,
+      updated_at: new Date().toISOString()
+    };
+    let changed = false;
+    const bt = $('sbal').value.trim();
+    if (bt !== '') {
+      const v = toNum(bt);
+      if (!isFinite(v)) { msg.textContent = 'Balance should be a number.'; return; }
+      row.balance = v; row.balance_ts = new Date().toISOString(); changed = true;
+    }
+    const lt = $('slow').value.trim();
+    if (lt !== '' && toNum(lt) !== s.low) {
+      const v = toNum(lt);
+      if (!isFinite(v) || v < 0) { msg.textContent = 'Alert level should be a number.'; return; }
+      row.low = v; changed = true;
+    }
+    if (!changed) { msg.textContent = 'Nothing to save yet.'; return; }
+    $('saveSet').disabled = true;
+    try {
+      const r = await sb.from('settings').upsert(row, { onConflict: 'user_id' });
+      if (r.error) throw r.error;
+      msg.textContent = 'Saved.';
+      $('sbal').value = '';
+      // update the screen straight away; the server copy refreshes quietly in the background
+      state.settings = {
+        balance: row.balance === null || row.balance === undefined ? null : Number(row.balance),
+        balanceTs: row.balance_ts ? new Date(row.balance_ts).getTime() : null,
+        low: Number(row.low)
+      };
+      renderAll();
+      loading = false;
+      loadAll(true);
+    } catch (e) { msg.textContent = 'Could not save. Try again.'; }
+    finally { $('saveSet').disabled = false; }
+  });
+
+  /* ---------- phone tokens ---------- */
+  $('fnUrl').textContent = FN_URL;
+  $('copyUrl').addEventListener('click', function () { copyText(FN_URL, $('copyUrl')); });
+  $('mkTok').addEventListener('click', async function () {
+    const msg = $('tokMsg');
+    msg.textContent = '';
+    $('mkTok').disabled = true;
+    try {
+      const r = await sb.rpc('create_ingest_token', { p_label: $('tlabel').value.trim() || 'Phone' });
+      if (r.error) throw r.error;
+      $('tokText').textContent = r.data;
+      $('newTok').hidden = false;
+      loading = false;
+      await loadAll(true);
+    } catch (e) {
+      msg.textContent = e && /limit/i.test(e.message || '') ? 'You already have 5 tokens. Delete one first.' : 'Could not create a token. Try again.';
+    } finally { $('mkTok').disabled = false; }
+  });
+  $('copyTok').addEventListener('click', function () { copyText($('tokText').textContent, $('copyTok')); });
+  $('phone').addEventListener('toggle', function () { if (!$('phone').open) { $('newTok').hidden = true; $('tokText').textContent = ''; } });
+
+  /* ---------- profile, consent and account ---------- */
+  const CONSENT_VERSION = 'v1-2026-11';
+  BANKS.map(function (b) { return b[0]; }).concat(['Other']).forEach(function (n) {
+    const o = document.createElement('option'); o.value = n; o.textContent = n; $('pbank').appendChild(o);
+  });
+  function deviceKind() {
+    const ua = navigator.userAgent || '';
+    if (/iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iphone';
+    if (/android/i.test(ua)) return 'android';
+    if (/windows|macintosh|linux|cros/i.test(ua)) return 'desktop';
+    return 'other';
+  }
+  let lastSeenSent = 0;
+  function touchSeen() {
+    if (!state.user || !state.profile || Date.now() - lastSeenSent < 10 * 60e3) return;
+    lastSeenSent = Date.now();
+    sb.from('profiles').update({ device: deviceKind(), last_seen_at: new Date().toISOString() }).eq('user_id', state.user.id).then(function () {}, function () {});
+  }
+  function fillProfile() {
+    const p = state.profile || {};
+    const meta = (state.user && state.user.user_metadata) || {};
+    $('pname').value = p.full_name || meta.full_name || '';
+    $('pphone').value = p.phone || '';
+    $('pcity').value = p.city || '';
+    $('ptype').value = p.user_type || '';
+    $('pbank').value = p.bank || '';
+    $('pheard').value = p.heard_from || '';
+    if (!$('pname').value) $('profile').open = true;
+  }
+  $('saveProf').addEventListener('click', async function () {
+    const msg = $('profMsg');
+    const name = $('pname').value.trim();
+    const phone = $('pphone').value.trim();
+    msg.style.color = 'var(--debit)';
+    if (!name) { msg.textContent = 'Enter your name first.'; return; }
+    if (phone && !/^\+?[0-9][0-9 -]{6,17}$/.test(phone)) { msg.textContent = 'Phone should be digits only, like +91 98765 43210.'; return; }
+    const row = {
+      full_name: name.slice(0, 60),
+      phone: phone || null,
+      city: $('pcity').value.trim().slice(0, 60) || null,
+      user_type: $('ptype').value || null,
+      bank: $('pbank').value || null,
+      heard_from: $('pheard').value || null,
+      updated_at: new Date().toISOString()
+    };
+    $('saveProf').disabled = true;
+    try {
+      const r = await sb.from('profiles').update(row).eq('user_id', state.user.id);
+      if (r.error) throw r.error;
+      state.profile = Object.assign({}, state.profile, row);
+      sb.auth.updateUser({ data: { full_name: row.full_name } }).then(function () {}, function () {});
+      msg.style.color = 'var(--mute)';
+      msg.textContent = 'Profile saved.';
+    } catch (e) { msg.textContent = 'Could not save your profile. Try again.'; }
+    finally { $('saveProf').disabled = false; }
+  });
+
+  // Two taps to delete: the first arms the button, the second deletes.
+  let delArmed = null;
+  $('delAcc').addEventListener('click', async function () {
+    const b = $('delAcc'), msg = $('delMsg');
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); b.textContent = 'Tap again to delete everything';
+      clearTimeout(delArmed);
+      delArmed = setTimeout(function () { b.classList.remove('armed'); b.textContent = 'Delete my account'; }, 6000);
+      return;
+    }
+    clearTimeout(delArmed);
+    b.disabled = true; msg.textContent = '';
+    try {
+      const r = await sb.rpc('delete_my_account');
+      if (r.error) throw r.error;
+      await sb.auth.signOut();
+      $('authMsg').style.color = 'var(--mute)';
+      $('authMsg').textContent = 'Your account and all your data have been deleted.';
+    } catch (e) {
+      msg.textContent = /owner/i.test((e && e.message) || '') ? 'The owner account cannot be deleted from the app.' : 'Could not delete your account. Try again.';
+    } finally { b.disabled = false; b.classList.remove('armed'); b.textContent = 'Delete my account'; }
+  });
+
+  $('consentGo').addEventListener('click', async function () {
+    const msg = $('consentMsg');
+    if (!$('cadult').checked) { msg.textContent = 'Selavu is only for people aged 18 and older.'; return; }
+    if (!$('cagree').checked) { msg.textContent = 'Tick the box to agree to the privacy note.'; return; }
+    $('consentGo').disabled = true; msg.textContent = '';
+    const row = { is_adult: true, consent_at: new Date().toISOString(), consent_version: CONSENT_VERSION };
+    try {
+      const r = await sb.from('profiles').upsert(Object.assign({ user_id: state.user.id }, row), { onConflict: 'user_id' });
+      if (r.error) throw r.error;
+      state.profile = Object.assign({}, state.profile, row);
+      showApp();
+    } catch (e) { msg.textContent = 'Could not save. Check your internet and try again.'; }
+    finally { $('consentGo').disabled = false; }
+  });
+  $('consentOut').addEventListener('click', async function () { await sb.auth.signOut(); });
+
+  /* ---------- confirm-your-email popup and the page the email link opens ---------- */
+  function showMailPop(email) {
+    const d = $('mailPop');
+    $('mailPopTo').textContent = email;
+    if (d.showModal) { try { d.showModal(); return; } catch (e) { /* falls through */ } }
+    d.setAttribute('open', '');
+  }
+  $('mailPopOk').addEventListener('click', function () { const d = $('mailPop'); if (d.close) d.close(); else d.removeAttribute('open'); $('apass').focus(); });
+  function authNote(text, kind) {
+    const n = $('authNote');
+    if (!text) { n.hidden = true; return; }
+    n.textContent = text; n.className = 'authnote ' + kind; n.hidden = false;
+  }
+  // The confirmation link brings people back with details in the address. Read them before Supabase does,
+  // so the person lands on Sign in (not straight inside the app), then clean the address bar.
+  const landing = (function () {
+    const h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const q = new URLSearchParams(location.search || '');
+    const type = h.get('type') || q.get('type');
+    const err = h.get('error_code') || q.get('error_code') || h.get('error') || q.get('error');
+    if (!type && !err) return null;
+    history.replaceState(null, '', location.pathname);
+    if (err) return 'error';
+    if (type === 'signup' || type === 'email' || type === 'email_change') return 'confirmed';
+    return null;
+  })();
+
+  /* ---------- auth ---------- */
+  let mode = 'in';
+  function setMode(m) {
+    mode = m;
+    $('tabIn').setAttribute('aria-selected', String(m === 'in'));
+    $('tabUp').setAttribute('aria-selected', String(m === 'up'));
+    $('authGo').textContent = m === 'in' ? 'Sign in' : 'Create account';
+    $('authLead').textContent = m === 'in' ? 'Sign in to see your expenses and balance.' : 'Make an account. Choose a password with at least 8 characters.';
+    $('apass').setAttribute('autocomplete', m === 'in' ? 'current-password' : 'new-password');
+    $('authMsg').textContent = '';
+    $('nameWrap').hidden = m !== 'up';
+    $('upChecks').hidden = m !== 'up';
+  }
+  $('tabIn').addEventListener('click', function () { setMode('in'); });
+  $('tabUp').addEventListener('click', function () { setMode('up'); });
+  function authError(e) {
+    const m = (e && e.message) || '';
+    if (/invalid login/i.test(m)) return 'Email or password is wrong.';
+    if (/already registered|already been registered/i.test(m)) return 'This email already has an account. Tap Sign in.';
+    if (/not confirmed/i.test(m)) return 'Confirm your email first: open the email from Selavu (check spam) and tap the link once. Then sign in.';
+    if (mode === 'up' && /only request this after|email rate limit|over_email_send/i.test(m)) return 'We already sent you a confirmation email. Open it (check spam too), tap the link once, then sign in here.';
+    if (/rate limit|too many|seconds/i.test(m)) return 'Too many tries. Wait a minute and try again.';
+    if (/password/i.test(m)) return 'Choose a stronger password (at least 8 characters).';
+    if (/fetch|network|failed/i.test(m)) return friendlyNet();
+    return 'Could not sign in. Try again.';
+  }
+  async function authGo() {
+    const email = $('aemail').value.trim();
+    const password = $('apass').value;
+    const msg = $('authMsg');
+    msg.textContent = '';
+    if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = 'Enter a valid email.'; return; }
+    if (password.length < 8) { msg.textContent = 'Password needs at least 8 characters.'; return; }
+    $('authGo').disabled = true;
+    try {
+      if (mode === 'in') {
+        const r = await sb.auth.signInWithPassword({ email: email, password: password });
+        if (r.error) throw r.error;
+      } else {
+        const name = $('aname').value.trim();
+        if (!name) { msg.textContent = 'Enter your name.'; return; }
+        if (!$('aadult').checked) { msg.textContent = 'Selavu is only for people aged 18 and older.'; return; }
+        if (!$('aagree').checked) { msg.textContent = 'Tick the box to agree to the privacy note.'; return; }
+        const appUrl = location.origin + location.pathname.replace(/index\.html$/, '');
+        const r = await sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: appUrl, data: { full_name: name, is_adult: 'true', consent_version: CONSENT_VERSION } } });
+        if (r.error) throw r.error;
+        if (!r.data.session) {
+          // Switch to Sign in so a second tap can't trigger another email, and keep the email filled in.
+          setMode('in');
+          $('apass').value = '';
+          msg.style.color = 'var(--mute)';
+          msg.textContent = 'Waiting for you to confirm ' + email + '. After tapping the link in the email, sign in here.';
+          showMailPop(email);
+          return;
+        }
+      }
+    } catch (e) { msg.style.color = ''; msg.textContent = authError(e); }
+    finally { $('authGo').disabled = false; }
+  }
+  $('authGo').addEventListener('click', authGo);
+  [$('aemail'), $('apass')].forEach(function (i) { i.addEventListener('keydown', function (e) { if (e.key === 'Enter') authGo(); }); });
+  $('signOut').addEventListener('click', async function () { await sb.auth.signOut(); });
+
+  function showApp() {
+    $('consentView').hidden = true;
+    $('appView').hidden = false;
+    fillProfile();
+    touchSeen();
+  }
+  async function route() {
+    const signedIn = !!state.user;
+    $('authView').hidden = signedIn;
+    $('appView').hidden = true;
+    $('consentView').hidden = true;
+    if (signedIn) {
+      const uid = state.user.id;
+      $('whoAmI').textContent = 'Signed in as ' + (state.user.email || 'you');
+      $('ownerLink').hidden = true;
+      sb.rpc('is_admin').then(function (r) { $('ownerLink').hidden = !(r && r.data === true); }, function () {});
+      $('apass').value = '';
+      state.loaded = false; state.seen = null; state.last = null; state.profile = null; lastSeenSent = 0;
+      renderAll();
+      loadAll(false);
+      // Profile decides whether to ask for consent first. If it cannot be read, the app still opens.
+      let p = null, ok = false;
+      try {
+        const r = await sb.from('profiles').select('full_name,phone,city,user_type,bank,heard_from,is_adult,consent_at,consent_version').eq('user_id', uid).maybeSingle();
+        ok = !r.error; p = r.data;
+      } catch (e) { ok = false; }
+      if (!state.user || state.user.id !== uid) return;
+      state.profile = p || {};
+      if (ok && !(p && p.is_adult && p.consent_at && p.consent_version === CONSENT_VERSION)) {
+        $('cadult').checked = false; $('cagree').checked = false; $('consentMsg').textContent = '';
+        $('consentView').hidden = false;
+      } else {
+        showApp();
+      }
+    } else {
+      state.txs = []; state.tokens = []; state.loaded = false; state.seen = null;
+      $('slow').value = ''; $('sbal').value = ''; $('newTok').hidden = true; $('tokText').textContent = '';
+      $('settings').dataset.opened = '';
+    }
+  }
+
+  /* ---------- boot ---------- */
+  async function boot() {
+    if (!window.supabase || !window.supabase.createClient) {
+      $('authView').hidden = false;
+      $('authMsg').textContent = 'Could not load the app. Check your internet and reload.';
+      return;
+    }
+    sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    sb.auth.onAuthStateChange(function (event, session) {
+      const was = state.user ? state.user.id : null;
+      state.user = session ? session.user : null;
+      const now = state.user ? state.user.id : null;
+      if (was !== now) route();
+    });
+    if (landing === 'confirmed') {
+      // The email is confirmed on the server already. Show Sign in instead of logging in from the link.
+      try { await sb.auth.signOut({ scope: 'local' }); } catch (e) { /* nothing to sign out */ }
+      state.user = null;
+      route();
+      setMode('in');
+      authNote('Email confirmed ✅ Now sign in with your email and password.', 'ok');
+      return startTimers();
+    }
+    try {
+      const r = await sb.auth.getSession();
+      state.user = r.data && r.data.session ? r.data.session.user : null;
+    } catch (e) { state.user = null; }
+    route();
+    if (landing === 'error' && !state.user) {
+      setMode('in');
+      authNote('That link was already used or has expired. If you already tapped it once, your email is confirmed: just sign in.', 'warn');
+    }
+    startTimers();
+  }
+  function startTimers() {
+    $('refreshBtn').addEventListener('click', function () { loading = false; loadAll(false); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && state.user) { loadAll(true); touchSeen(); } });
+    setInterval(function () { if (!document.hidden && state.user) loadAll(true); }, 30000);
+  }
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* the app still works without it */ }); });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
